@@ -9,15 +9,15 @@
 //!
 //! # Examples
 //!
-//! ```rust
-//! // use aisdk::prompt::Prompt;
+//! ```rust,no_run
+//! use aisdk::prompt::{Prompt, Promptable};
 //!
-//! // Prompt::new("system/base")  // loads from ./prompts/system/base.prompt
-//! //    .with_extension("txt") // optionally override the extension
-//! //    .with("variable1", "value1")
-//! //    .with("variable2", "value2")
-//! //    .with("variable3", "value3")
-//! //    .generate()
+//! Prompt::new("system/base")  // loads from ./system/base
+//!    .with_extension("txt") // optionally override the extension
+//!    .with("variable1", "value1")
+//!    .with("variable2", "value2")
+//!    .with("variable3", "value3")
+//!    .generate();
 //! ```
 
 #[cfg(feature = "prompt")]

@@ -61,8 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # No Rust toolchain needed – deny ships its own advisory DB
-      - uses: EmbarkStudios/cargo-deny-action@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
           command: check all   # runs licenses, advisories, bans, sources, duplicates
 

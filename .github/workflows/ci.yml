@@ -62,8 +62,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-        with:
-          command: check all   # runs licenses, advisories, bans, sources, duplicates
+      - uses: EmbarkStudios/cargo-deny-action@v1 # runs licenses, advisories, bans, sources, duplicates
 
   # Audit to check for security vulnerabilities
   audit:

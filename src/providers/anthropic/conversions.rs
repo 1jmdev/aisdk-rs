@@ -3,8 +3,8 @@ use crate::core::language_model::{
     LanguageModelOptions, LanguageModelResponseContentType, ReasoningEffort, Usage,
 };
 use crate::providers::anthropic::client::{
-    AnthropicAssistantMessageParamContent, AnthropicClient, AntropicMessageParam, AntropicThinking,
-    AntropicTool, AntropicUsage,
+    AnthropicAssistantMessageParamContent, AnthropicClient, AnthropicMessageDeltaUsage,
+    AntropicMessageParam, AntropicThinking, AntropicTool, AntropicUsage,
 };
 
 impl From<LanguageModelOptions> for AnthropicClient {
@@ -111,6 +111,20 @@ impl From<AntropicUsage> for Usage {
             input_tokens: Some(usage.input_tokens),
             output_tokens: Some(usage.output_tokens),
             cached_tokens: Some(usage.cache_creation_input_tokens + usage.cache_read_input_tokens),
+            reasoning_tokens: None,
+        }
+    }
+}
+
+impl From<AnthropicMessageDeltaUsage> for Usage {
+    fn from(usage: AnthropicMessageDeltaUsage) -> Self {
+        Self {
+            input_tokens: Some(usage.input_tokens.unwrap_or(0)),
+            output_tokens: Some(usage.output_tokens),
+            cached_tokens: Some(
+                usage.cache_creation_input_tokens.unwrap_or(0)
+                    + usage.cache_read_input_tokens.unwrap_or(0),
+            ),
             reasoning_tokens: None,
         }
     }

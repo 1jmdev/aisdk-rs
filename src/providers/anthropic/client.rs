@@ -30,7 +30,16 @@ pub enum AnthropicErrorType {
 
 impl std::fmt::Display for AnthropicErrorType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.to_string())
+        match self {
+            AnthropicErrorType::InvalidRequestError => write!(f, "invalid_request_error"),
+            AnthropicErrorType::AuthenticationError => write!(f, "authentication_error"),
+            AnthropicErrorType::PermissionError => write!(f, "permission_error"),
+            AnthropicErrorType::NotFoundError => write!(f, "not_found_error"),
+            AnthropicErrorType::RequestTooLarge => write!(f, "request_too_large"),
+            AnthropicErrorType::RateLimitError => write!(f, "rate_limit_error"),
+            AnthropicErrorType::ApiError => write!(f, "api_error"),
+            AnthropicErrorType::OverloadedError => write!(f, "overloaded_error"),
+        }
     }
 }
 

@@ -11,9 +11,10 @@ keywords = ["ai", "sdk", "aisdk", "ai-sdk-rs", "openai"]
 categories = ["api-bindings", "asynchronous"]
 
 [features]
-full = ["prompt", "openai", "anthropic"]
+full = ["prompt", "openai", "anthropic", "groq"]
 openai = ["async-openai"]
 anthropic = ["reqwest"]
+groq = ["openai"]
 prompt = ["tera", "glob"]
 test-access = []
 
@@ -59,3 +60,7 @@ name = "anthropic_tests"
 path = "tests/provider/anthropic_tests.rs"
 required-features = ["anthropic", "test-access"]
 
+[[test]]
+name = "groq_tests"
+path = "tests/provider/groq_tests.rs"
+required-features = ["groq", "test-access"]

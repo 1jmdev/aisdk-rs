@@ -19,11 +19,12 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --all-features
-      - run: cargo install cargo-semver-checks
-      - run: cargo semver-checks check-release # ensure correct version format
+      - uses: obi1kenobi/cargo-semver-checks-action@v2
+        with:
+          command: semver-checks check-release
       - uses: rust-lang/crates-io-auth-action@v1
         id: auth
-      - run: cargo publish -p aisdk-macros --token ${{ steps.auth.outputs.token }}
+      - run: cargo publish --manifest-path macros/Cargo.toml --token ${{ steps.auth.outputs.token }}
       - run: cargo publish --token ${{ steps.auth.outputs.token }}
       - uses: softprops/action-gh-release@v1
         with:

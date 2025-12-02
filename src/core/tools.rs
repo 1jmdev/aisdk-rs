@@ -214,7 +214,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_tool_macro_with_no_args() {
-        schemars::schema_for!(String);
         let tool = my_example_tool();
 
         assert_eq!(tool.name, "my_example_tool");

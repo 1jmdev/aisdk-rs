@@ -16,6 +16,9 @@ Changelog entries are grouped by type, with the following types:
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+- OpenAI provider add verbosity option to default value
+
 ## [0.2.0] - 2025-12-02
 
 ### Added

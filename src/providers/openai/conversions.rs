@@ -79,6 +79,7 @@ impl From<LanguageModelOptions> for CreateResponse {
                     .map(from_schema_to_response_format)
                     .map(TextResponseFormat::JsonSchema)
                     .unwrap_or(TextResponseFormat::Text),
+                verbosity: None,
             }),
             reasoning,
             temperature: options.temperature.map(|t| t as f32 / 100.0),

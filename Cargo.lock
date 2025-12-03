@@ -45,6 +45,7 @@ dependencies = [
  "serde",
  "serde_json",
  "syn",
+ "tokio",
 ]
 
 [[package]]

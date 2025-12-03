@@ -17,7 +17,12 @@ syn = { version = "2.0", features = ["full", "parsing", "extra-traits"] }
 quote = "1.0"
 serde = {version = "1.0.219", features = ["derive"]}
 schemars = "1.0.4"
+aisdk = {path = ".."}
 
 [dev-dependencies]
-aisdk = { path = ".." }
 serde_json = "1.0"
+tokio = { version = "1.46.1", features = ["full"]}
+
+[[test]]
+name = "test_tools"
+path = "tests/test_tools.rs"

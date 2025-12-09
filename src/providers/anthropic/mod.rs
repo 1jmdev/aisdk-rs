@@ -13,10 +13,9 @@ use crate::core::language_model::{
 use crate::core::messages::AssistantMessage;
 use crate::core::tools::ToolDetails;
 use crate::core::{LanguageModelStreamChunkType, ToolCallInfo};
-use crate::error::ProviderError;
 use crate::providers::anthropic::client::{
-    AnthropicContentBlock, AnthropicDelta, AnthropicError, AnthropicMessageDeltaUsage,
-    AnthropicParams, AnthropicStreamEvent,
+    AnthropicContentBlock, AnthropicDelta, AnthropicMessageDeltaUsage, AnthropicParams,
+    AnthropicStreamEvent,
 };
 use crate::providers::anthropic::settings::{
     AnthropicProviderSettings, AnthropicProviderSettingsBuilder,
@@ -41,13 +40,6 @@ pub struct Anthropic {
 // #[derive(Debug, Clone)]
 // pub struct AnthropicError;
 
-impl std::fmt::Display for AnthropicError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "AnthropicError")
-    }
-}
-impl std::error::Error for AnthropicError {}
-
 impl Anthropic {
     /// Creates a new `Anthropic` provider with the given settings.
     pub fn new(model_name: impl Into<String>) -> Self {
@@ -65,8 +57,6 @@ impl Anthropic {
 
 impl Provider for Anthropic {}
 
-impl ProviderError for AnthropicError {}
-
 #[async_trait]
 impl LanguageModel for Anthropic {
     fn name(&self) -> String {
@@ -79,7 +69,8 @@ impl LanguageModel for Anthropic {
     ) -> Result<LanguageModelResponse> {
         let mut request: AnthropicParams = options.into();
         request.model = self.settings.model_name.clone();
-        let response = request.send().await?;
+
+        let response = request.send(self.settings.base_url.clone()).await?;
 
         let mut collected: Vec<LanguageModelResponseContentType> = Vec::new();
 
@@ -119,7 +110,9 @@ impl LanguageModel for Anthropic {
     async fn stream_text(&mut self, options: LanguageModelOptions) -> Result<ProviderStream> {
         let mut request: AnthropicParams = options.into();
         request.model = self.settings.model_name.clone();
-        let response = request.send_and_stream().await?;
+        let response = request
+            .send_and_stream(self.settings.base_url.clone())
+            .await?;
 
         #[derive(Default)]
         struct StreamState {

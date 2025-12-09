@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::error::ProviderError;
+
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub enum AnthropicErrorType {
     #[serde(rename = "invalid_request_error")]
@@ -252,6 +254,16 @@ impl std::fmt::Display for AnthropicErrorType {
         }
     }
 }
+
+impl std::fmt::Display for AnthropicError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "AnthropicError: {:?} - {:?}", self.type_, self.message)
+    }
+}
+
+impl std::error::Error for AnthropicError {}
+
+impl ProviderError for AnthropicError {}
 
 // ---------------------------------- Helper functions ----------------------------------
 fn assistant() -> String {

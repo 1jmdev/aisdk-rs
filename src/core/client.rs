@@ -5,12 +5,13 @@ use crate::error::{Error, Result};
 use futures::Stream;
 use futures::StreamExt;
 use reqwest;
+use reqwest::Url;
 use serde::de::DeserializeOwned;
 use std::pin::Pin;
 
 #[allow(dead_code)]
 pub(crate) trait Request {
-    type Response: DeserializeOwned;
+    type Response: DeserializeOwned + std::fmt::Debug + Clone;
     type StreamEvent: DeserializeOwned;
 
     fn path(&self) -> &str;
@@ -22,10 +23,11 @@ pub(crate) trait Request {
     /// Sets the default headers for the request
     fn headers(&self) -> reqwest::header::HeaderMap;
 
-    async fn send(&self) -> Result<Self::Response> {
+    async fn send(&self, base_url: Url) -> Result<Self::Response> {
         let client = reqwest::Client::new();
+        let base_url = base_url.join(self.path()).expect("Invalid base URL");
         let resp = client
-            .request(self.method(), self.path())
+            .request(self.method(), base_url)
             .headers(self.headers())
             .query(&self.query_params())
             .body(self.body())
@@ -42,10 +44,12 @@ pub(crate) trait Request {
 
     async fn send_and_stream(
         &self,
+        base_url: Url,
     ) -> Result<Pin<Box<dyn Stream<Item = Result<Self::StreamEvent>> + Send>>> {
         let client = reqwest::Client::new();
+        let base_url = base_url.join(self.path()).expect("Invalid base URL");
         let resp = client
-            .request(self.method(), self.path())
+            .request(self.method(), base_url)
             .headers(self.headers())
             .query(&self.query_params())
             .body(self.streaming_body())

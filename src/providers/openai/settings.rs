@@ -18,9 +18,6 @@ pub struct OpenAIProviderSettings {
 
     /// The name of the provider.
     pub provider_name: String,
-
-    /// The name of the model to use.
-    pub model_name: String,
 }
 
 impl OpenAIProviderSettings {
@@ -63,12 +60,14 @@ impl OpenAIProviderSettingsBuilder {
             base_url: self.base_url.expect("Missing base URL"),
             api_key: self.api_key.unwrap_or_default(),
             provider_name: self.provider_name.unwrap_or_else(|| "openai".to_string()),
-            model_name: self.model_name.unwrap_or_else(|| "gpt-4o".to_string()),
         };
 
         Ok(OpenAI {
             settings,
-            options: OpenAIOptions::builder().build()?,
+            options: OpenAIOptions::builder()
+                .model(self.model_name.expect("Missing model name"))
+                .build()
+                .unwrap(),
         })
     }
 }

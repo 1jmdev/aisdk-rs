@@ -19,9 +19,6 @@ pub struct AnthropicProviderSettings {
 
     /// The name of the provider.
     pub provider_name: String,
-
-    /// The name of the model to use.
-    pub model_name: String,
 }
 
 impl AnthropicProviderSettings {
@@ -66,14 +63,14 @@ impl AnthropicProviderSettingsBuilder {
             provider_name: self
                 .provider_name
                 .unwrap_or_else(|| "anthropic".to_string()),
-            model_name: self
-                .model_name
-                .unwrap_or_else(|| "claude-4-sonnet".to_string()),
         };
 
         Ok(Anthropic {
             settings,
-            options: AnthropicOptions::builder().build().unwrap(),
+            options: AnthropicOptions::builder()
+                .model(self.model_name.expect("Missing model name"))
+                .build()
+                .unwrap(),
         })
     }
 }

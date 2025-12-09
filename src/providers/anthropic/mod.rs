@@ -58,7 +58,7 @@ impl Provider for Anthropic {}
 #[async_trait]
 impl LanguageModel for Anthropic {
     fn name(&self) -> String {
-        self.settings.model_name.clone()
+        self.options.model.clone()
     }
 
     async fn generate_text(
@@ -66,8 +66,7 @@ impl LanguageModel for Anthropic {
         options: LanguageModelOptions,
     ) -> Result<LanguageModelResponse> {
         let mut options: AnthropicOptions = options.into();
-        options.model = self.settings.model_name.clone();
-
+        options.model = self.options.model.clone();
         self.options = options;
 
         let response = self.send(self.settings.base_url.clone()).await?;
@@ -109,9 +108,8 @@ impl LanguageModel for Anthropic {
 
     async fn stream_text(&mut self, options: LanguageModelOptions) -> Result<ProviderStream> {
         let mut options: AnthropicOptions = options.into();
-        options.model = self.settings.model_name.clone();
         options.stream = Some(true);
-
+        options.model = self.options.model.clone();
         self.options = options;
 
         let response = self.send_and_stream(self.settings.base_url.clone()).await?;

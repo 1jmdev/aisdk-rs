@@ -12,7 +12,10 @@ pub mod stream_text;
 use crate::core::messages::{AssistantMessage, TaggedMessage, TaggedMessageHelpers};
 use crate::core::tools::ToolList;
 use crate::core::utils;
-use crate::core::{Message, ToolCallInfo, ToolResultInfo};
+use crate::core::{
+    Message,
+    tools::{ToolCallInfo, ToolResultInfo},
+};
 use crate::error::{Error, Result};
 use async_trait::async_trait;
 use derive_builder::Builder;

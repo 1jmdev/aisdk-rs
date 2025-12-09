@@ -1,6 +1,6 @@
 use crate::core::{
-    ToolCallInfo, ToolResultInfo,
     language_model::{LanguageModelResponseContentType, Usage},
+    tools::{ToolCallInfo, ToolResultInfo},
 };
 
 /// Role for model messages.

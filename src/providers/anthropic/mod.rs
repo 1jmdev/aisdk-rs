@@ -12,7 +12,7 @@ use crate::core::language_model::{
 };
 use crate::core::messages::AssistantMessage;
 use crate::core::tools::ToolDetails;
-use crate::core::{LanguageModelStreamChunkType, ToolCallInfo};
+use crate::core::{LanguageModelStreamChunkType, tools::ToolCallInfo};
 use crate::error::ProviderError;
 use crate::providers::anthropic::client::{
     AnthropicClient, AnthropicDelta, AnthropicError, AnthropicMessageDeltaUsage,

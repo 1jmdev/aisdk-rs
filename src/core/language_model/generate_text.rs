@@ -162,9 +162,10 @@ impl Deref for GenerateTextResponse {
 mod tests {
     use super::*;
     use crate::core::{
-        AssistantMessage, ToolCallInfo, ToolResultInfo,
+        AssistantMessage,
         language_model::{LanguageModelResponseContentType, Usage},
         messages::TaggedMessage,
+        tools::{ToolCallInfo, ToolResultInfo},
     };
 
     #[test]

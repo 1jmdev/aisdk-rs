@@ -10,7 +10,7 @@
 pub mod language_model;
 pub mod messages;
 pub mod provider;
-pub mod tools;
+pub(crate) mod tools;
 pub mod utils;
 
 pub use aisdk_macros::tool;
@@ -23,4 +23,4 @@ pub use language_model::{
 
 pub use messages::{AssistantMessage, Message, Role, SystemMessage, UserMessage};
 pub use provider::Provider;
-pub use tools::{Tool, ToolCallInfo, ToolResultInfo};
+pub use tools::{Tool, ToolExecute};

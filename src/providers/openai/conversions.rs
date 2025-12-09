@@ -1,10 +1,10 @@
 //! Helper functions and conversions for the OpenAI provider.
 
+use crate::core::Tool;
 use crate::core::language_model::{
     LanguageModelOptions, LanguageModelResponseContentType, ReasoningEffort, Usage,
 };
 use crate::core::messages::Message;
-use crate::core::tools::Tool;
 use async_openai::types::responses::{
     CreateResponse, Function, Input, InputContent, InputItem, InputMessage, InputMessageType,
     ReasoningConfig, ReasoningSummary, Role, TextConfig, TextResponseFormat, ToolDefinition,

@@ -18,7 +18,6 @@ pub(crate) trait Client {
     fn method(&self) -> reqwest::Method;
     fn query_params(&self) -> Vec<(&str, &str)>;
     fn body(&self) -> reqwest::Body;
-    fn streaming_body(&self) -> reqwest::Body;
 
     /// Sets the default headers for the request
     fn headers(&self) -> reqwest::header::HeaderMap;
@@ -52,7 +51,7 @@ pub(crate) trait Client {
             .request(self.method(), base_url)
             .headers(self.headers())
             .query(&self.query_params())
-            .body(self.streaming_body())
+            .body(self.body())
             .send()
             .await
             .and_then(|response| response.error_for_status())

@@ -6,15 +6,15 @@ pub mod types;
 
 pub use types::*;
 
-use crate::core::client::Client;
 use crate::error::Error;
+use crate::{core::client::Client, providers::openai::OpenAI};
 use derive_builder::Builder;
 use reqwest::{self, header::CONTENT_TYPE};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, Builder)]
 #[builder(setter(into), build_fn(error = "Error"))]
-pub struct OpenAiParams {
+pub struct OpenAIOptions {
     pub model: String,
     pub input: Input,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -33,13 +33,13 @@ pub struct OpenAiParams {
     pub tools: Option<Vec<ToolParams>>,
 }
 
-impl OpenAiParams {
-    pub fn builder() -> OpenAiParamsBuilder {
-        OpenAiParamsBuilder::default()
+impl OpenAIOptions {
+    pub fn builder() -> OpenAIOptionsBuilder {
+        OpenAIOptionsBuilder::default()
     }
 }
 
-impl Client for OpenAiParams {
+impl Client for OpenAI {
     type Response = types::OpenAiResponse;
     type StreamEvent = types::OpenAiStreamEvent;
 
@@ -58,12 +58,9 @@ impl Client for OpenAiParams {
         // Authorization
         default_headers.insert(
             "Authorization",
-            format!(
-                "Bearer {}",
-                std::env::var("OPENAI_API_KEY").unwrap_or_default()
-            )
-            .parse()
-            .unwrap(),
+            format!("Bearer {}", self.settings.api_key.clone())
+                .parse()
+                .unwrap(),
         );
 
         default_headers
@@ -77,15 +74,9 @@ impl Client for OpenAiParams {
         // prettified json
         println!(
             "OpenAi Request Body: \n---\n{}\n---",
-            serde_json::to_string_pretty(self).unwrap()
+            serde_json::to_string_pretty(&self.options).unwrap()
         );
-        let body = serde_json::to_string(self).unwrap();
+        let body = serde_json::to_string(&self.options).unwrap();
         reqwest::Body::from(body)
-    }
-
-    fn streaming_body(&self) -> reqwest::Body {
-        let mut clone = self.clone();
-        clone.stream = Some(true);
-        reqwest::Body::from(serde_json::to_string(&clone).unwrap())
     }
 }

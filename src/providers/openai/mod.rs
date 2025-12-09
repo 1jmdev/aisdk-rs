@@ -5,13 +5,13 @@ pub mod client;
 pub mod conversions;
 pub mod settings;
 
-use crate::core::client::Request;
+use crate::core::client::Client;
 use crate::core::language_model::{
     LanguageModelOptions, LanguageModelResponse, LanguageModelResponseContentType,
     LanguageModelStreamChunk, LanguageModelStreamChunkType, ProviderStream,
 };
 use crate::core::messages::AssistantMessage;
-use crate::providers::openai::client::types;
+use crate::providers::openai::client::{OpenAIOptions, types};
 use crate::providers::openai::settings::{OpenAIProviderSettings, OpenAIProviderSettingsBuilder};
 use crate::{
     core::{language_model::LanguageModel, provider::Provider, tools::ToolCallInfo},
@@ -23,6 +23,7 @@ use futures::StreamExt;
 /// The OpenAI provider.
 #[derive(Debug, Clone)]
 pub struct OpenAI {
+    options: OpenAIOptions,
     settings: OpenAIProviderSettings,
 }
 
@@ -53,11 +54,12 @@ impl LanguageModel for OpenAI {
         &mut self,
         options: LanguageModelOptions,
     ) -> Result<LanguageModelResponse> {
-        let mut request: client::OpenAiParams = options.clone().into();
+        let mut options: OpenAIOptions = options.into();
+        options.model = self.settings.model_name.clone();
 
-        request.model = self.settings.model_name.to_string();
+        self.options = options;
 
-        let response: client::OpenAiResponse = request.send(self.settings.base_url.clone()).await?;
+        let response: client::OpenAiResponse = self.send(self.settings.base_url.clone()).await?;
 
         let mut collected: Vec<LanguageModelResponseContentType> = Vec::new();
 
@@ -95,13 +97,13 @@ impl LanguageModel for OpenAI {
     }
 
     async fn stream_text(&mut self, options: LanguageModelOptions) -> Result<ProviderStream> {
-        let mut request: client::OpenAiParams = options.into();
-        request.model = self.settings.model_name.to_string();
-        request.stream = Some(true);
+        let mut options: OpenAIOptions = options.into();
+        options.model = self.settings.model_name.to_string();
+        options.stream = Some(true);
 
-        let openai_stream = request
-            .send_and_stream(self.settings.base_url.clone())
-            .await?;
+        self.options = options;
+
+        let openai_stream = self.send_and_stream(self.settings.base_url.clone()).await?;
 
         #[derive(Default)]
         struct StreamState {

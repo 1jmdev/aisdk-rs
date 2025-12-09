@@ -32,7 +32,7 @@ impl From<Tool> for types::ToolParams {
     }
 }
 
-impl From<LanguageModelOptions> for client::OpenAiParams {
+impl From<LanguageModelOptions> for client::OpenAIOptions {
     fn from(options: LanguageModelOptions) -> Self {
         let items: Vec<types::InputItem> = options
             .messages
@@ -66,7 +66,7 @@ impl From<LanguageModelOptions> for client::OpenAiParams {
                 effort: Some(reasoning.into()),
             });
 
-        client::OpenAiParams {
+        client::OpenAIOptions {
             model: "".to_string(), // will be set in mod.rs
             input: types::Input::InputItemList(items),
             text: Some(types::TextConfig {
@@ -239,7 +239,7 @@ mod tests {
             reasoning_effort: Some(LMReasoningEffort::Low),
             ..Default::default()
         };
-        let create_response: OpenAiParams = options.into();
+        let create_response: OpenAIOptions = options.into();
         assert!(create_response.reasoning.is_some());
         let reasoning = create_response.reasoning.unwrap();
         assert_eq!(reasoning.effort, Some(ReasoningEffort::Minimal));
@@ -252,7 +252,7 @@ mod tests {
             reasoning_effort: Some(LMReasoningEffort::Medium),
             ..Default::default()
         };
-        let create_response: OpenAiParams = options.into();
+        let create_response: OpenAIOptions = options.into();
         assert!(create_response.reasoning.is_some());
         let reasoning = create_response.reasoning.unwrap();
         assert_eq!(reasoning.effort, Some(ReasoningEffort::Medium));
@@ -265,7 +265,7 @@ mod tests {
             reasoning_effort: Some(LMReasoningEffort::High),
             ..Default::default()
         };
-        let create_response: OpenAiParams = options.into();
+        let create_response: OpenAIOptions = options.into();
         assert!(create_response.reasoning.is_some());
         let reasoning = create_response.reasoning.unwrap();
         assert_eq!(reasoning.effort, Some(ReasoningEffort::High));
@@ -278,7 +278,7 @@ mod tests {
             reasoning_effort: None,
             ..Default::default()
         };
-        let create_response: OpenAiParams = options.into();
+        let create_response: OpenAIOptions = options.into();
         assert!(create_response.reasoning.is_none());
     }
 

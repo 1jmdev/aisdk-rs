@@ -110,6 +110,7 @@ impl LanguageModel for Anthropic {
     async fn stream_text(&mut self, options: LanguageModelOptions) -> Result<ProviderStream> {
         let mut options: AnthropicOptions = options.into();
         options.model = self.settings.model_name.clone();
+        options.stream = Some(true);
 
         self.options = options;
 

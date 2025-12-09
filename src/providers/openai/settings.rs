@@ -2,7 +2,10 @@
 
 use reqwest::{IntoUrl, Url};
 
-use crate::{error::Error, providers::openai::OpenAI};
+use crate::{
+    error::Error,
+    providers::openai::{OpenAI, client::OpenAIOptions},
+};
 
 /// Settings for the OpenAI provider.
 #[derive(Debug, Clone)]
@@ -63,7 +66,10 @@ impl OpenAIProviderSettingsBuilder {
             model_name: self.model_name.unwrap_or_else(|| "gpt-4o".to_string()),
         };
 
-        Ok(OpenAI { settings })
+        Ok(OpenAI {
+            settings,
+            options: OpenAIOptions::builder().build()?,
+        })
     }
 }
 

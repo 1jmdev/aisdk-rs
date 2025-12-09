@@ -61,13 +61,7 @@ impl Client for Anthropic {
     }
 
     fn body(&self) -> reqwest::Body {
-        let body = serde_json::to_string(self).unwrap();
+        let body = serde_json::to_string(&self.options).unwrap();
         reqwest::Body::from(body)
-    }
-
-    fn streaming_body(&self) -> reqwest::Body {
-        let mut clone = self.options.clone();
-        clone.stream = Some(true);
-        reqwest::Body::from(serde_json::to_string(&clone).unwrap())
     }
 }

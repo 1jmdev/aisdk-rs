@@ -46,7 +46,6 @@ impl<M: LanguageModel> LanguageModelRequest<M> {
                 hook(&mut options);
             }
 
-            println!("stream_text is called");
             let mut response = self
                 .model
                 .stream_text(options.clone())
@@ -59,7 +58,6 @@ impl<M: LanguageModel> LanguageModelRequest<M> {
                 match chunk {
                     Ok(chunk) => {
                         for output in chunk {
-                            // TODO: handle Reasoning delta event (streaming reasoning)
                             match output {
                                 LanguageModelStreamChunk::Done(final_msg) => {
                                     match final_msg.content {

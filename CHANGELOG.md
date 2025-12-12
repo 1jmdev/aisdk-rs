@@ -22,6 +22,7 @@ Changelog entries are grouped by type, with the following types:
 
 ### Removed
 - Removed the tool macro re-export from `src/core/mod.rs`. User should use `aisdk_macros::tool` directly
+- Removed async-openai dependency
 
 ## [0.2.1] - 2025-12-02
 

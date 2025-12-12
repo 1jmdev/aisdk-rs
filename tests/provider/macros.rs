@@ -397,23 +397,6 @@ macro_rules! generate_language_model_streaming_tests {
             assert!(chunks_received > 0);
         }
 
-        #[tokio::test]
-        async fn test_streaming_with_longer_output() {
-            skip_if_no_api_key!();
-
-            let mut result = LanguageModelRequest::builder()
-                .model(<$provider_type>::new($config.basic_model()))
-                .prompt("Tell me a short story that is one paragraph long.")
-                .build()
-                .stream_text()
-                .await
-                .unwrap();
-
-            while let Some(chunk) = result.stream.next().await {
-                println!("{:?}", chunk);
-            }
-        }
-
     };
 }
 

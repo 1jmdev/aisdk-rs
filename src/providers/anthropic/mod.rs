@@ -4,8 +4,8 @@
 pub mod client;
 pub mod conversions;
 pub mod settings;
-pub mod utils;
 
+use crate::core::client::Client;
 use crate::core::language_model::{
     LanguageModelOptions, LanguageModelResponse, LanguageModelResponseContentType,
     LanguageModelStreamChunk, ProviderStream,
@@ -13,10 +13,9 @@ use crate::core::language_model::{
 use crate::core::messages::AssistantMessage;
 use crate::core::tools::ToolDetails;
 use crate::core::{LanguageModelStreamChunkType, ToolCallInfo};
-use crate::error::ProviderError;
 use crate::providers::anthropic::client::{
-    AnthropicClient, AnthropicDelta, AnthropicError, AnthropicMessageDeltaUsage,
-    AnthropicStreamEvent, AntropicContentBlock, Request,
+    AnthropicContentBlock, AnthropicDelta, AnthropicMessageDeltaUsage, AnthropicOptions,
+    AnthropicStreamEvent,
 };
 use crate::providers::anthropic::settings::{
     AnthropicProviderSettings, AnthropicProviderSettingsBuilder,
@@ -30,23 +29,14 @@ use futures::StreamExt;
 use serde::Serialize;
 use std::collections::HashMap;
 
+pub const ANTHROPIC_API_VERSION: &str = "2023-06-01";
+
 /// The Anthropic provider.
 #[derive(Debug, Serialize)]
 pub struct Anthropic {
-    #[serde(skip)]
-    pub client: reqwest::Client,
     pub settings: AnthropicProviderSettings,
+    options: AnthropicOptions,
 }
-
-// #[derive(Debug, Clone)]
-// pub struct AnthropicError;
-
-impl std::fmt::Display for AnthropicError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "AnthropicError")
-    }
-}
-impl std::error::Error for AnthropicError {}
 
 impl Anthropic {
     /// Creates a new `Anthropic` provider with the given settings.
@@ -65,40 +55,40 @@ impl Anthropic {
 
 impl Provider for Anthropic {}
 
-impl ProviderError for AnthropicError {}
-
 #[async_trait]
 impl LanguageModel for Anthropic {
     fn name(&self) -> String {
-        self.settings.model_name.clone()
+        self.options.model.clone()
     }
 
     async fn generate_text(
         &mut self,
         options: LanguageModelOptions,
     ) -> Result<LanguageModelResponse> {
-        let mut request: AnthropicClient = options.into();
-        request.model = self.settings.model_name.clone();
-        let response = request.send().await?;
+        let mut options: AnthropicOptions = options.into();
+        options.model = self.options.model.clone();
+        self.options = options;
+
+        let response = self.send(self.settings.base_url.clone()).await?;
 
         let mut collected: Vec<LanguageModelResponseContentType> = Vec::new();
 
         for out in response.content {
             match out {
-                AntropicContentBlock::Text { text, .. } => {
+                AnthropicContentBlock::Text { text, .. } => {
                     collected.push(LanguageModelResponseContentType::new(text));
                 }
-                AntropicContentBlock::Thinking {
+                AnthropicContentBlock::Thinking {
                     signature,
                     thinking,
                 } => {
                     collected.push(LanguageModelResponseContentType::Reasoning(signature));
                     collected.push(LanguageModelResponseContentType::Reasoning(thinking));
                 }
-                AntropicContentBlock::RedactedThinking { data } => {
+                AnthropicContentBlock::RedactedThinking { data } => {
                     collected.push(LanguageModelResponseContentType::Reasoning(data));
                 }
-                AntropicContentBlock::ToolUse { id, input, name } => {
+                AnthropicContentBlock::ToolUse { id, input, name } => {
                     collected.push(LanguageModelResponseContentType::ToolCall(ToolCallInfo {
                         input,
                         tool: ToolDetails {
@@ -117,13 +107,15 @@ impl LanguageModel for Anthropic {
     }
 
     async fn stream_text(&mut self, options: LanguageModelOptions) -> Result<ProviderStream> {
-        let mut request: AnthropicClient = options.into();
-        request.model = self.settings.model_name.clone();
-        let response = request.send_and_stream().await?;
+        let mut options: AnthropicOptions = options.into();
+        options.stream = Some(true);
+        options.model = self.options.model.clone();
+        self.options = options;
+
+        let response = self.send_and_stream(self.settings.base_url.clone()).await?;
 
         #[derive(Default)]
         struct StreamState {
-            completed: bool,
             content_blocks: HashMap<usize, AccumulatedBlock>,
             usage: Option<AnthropicMessageDeltaUsage>,
         }
@@ -143,11 +135,6 @@ impl LanguageModel for Anthropic {
         let stream = response.scan::<_, Result<Vec<LanguageModelStreamChunk>>, _, _>(
             StreamState::default(),
             |state, evt_res| {
-                // If already completed, don't emit anything more
-                if state.completed {
-                    return futures::future::ready(None);
-                };
-
                 futures::future::ready(match evt_res {
                     Ok(event) => match event {
                         AnthropicStreamEvent::MessageStart { .. } => {
@@ -159,19 +146,19 @@ impl LanguageModel for Anthropic {
                             index,
                             content_block,
                         } => match content_block {
-                            AntropicContentBlock::Text { .. } => {
+                            AnthropicContentBlock::Text { .. } => {
                                 state
                                     .content_blocks
                                     .insert(index, AccumulatedBlock::Text(String::new()));
                                 None
                             }
-                            AntropicContentBlock::Thinking { .. } => {
+                            AnthropicContentBlock::Thinking { .. } => {
                                 state
                                     .content_blocks
                                     .insert(index, AccumulatedBlock::Thinking(String::new()));
                                 None
                             }
-                            AntropicContentBlock::RedactedThinking { data } => {
+                            AnthropicContentBlock::RedactedThinking { data } => {
                                 state.content_blocks.insert(
                                     index,
                                     AccumulatedBlock::RedactedThinking(data.clone()),
@@ -181,7 +168,7 @@ impl LanguageModel for Anthropic {
                                     usage: None,
                                 })]))
                             }
-                            AntropicContentBlock::ToolUse { id, name, .. } => {
+                            AnthropicContentBlock::ToolUse { id, name, .. } => {
                                 state.content_blocks.insert(
                                     index,
                                     AccumulatedBlock::ToolUse {
@@ -229,7 +216,6 @@ impl LanguageModel for Anthropic {
                             None
                         }
                         AnthropicStreamEvent::MessageStop => {
-                            state.completed = true;
                             let mut collected = vec![];
                             for block in state.content_blocks.values() {
                                 match block {
@@ -284,8 +270,6 @@ impl LanguageModel for Anthropic {
                                 .collect()))
                         }
                         AnthropicStreamEvent::Error { error } => {
-                            state.completed = true;
-
                             let reason = format!("{}: {}", error.type_, error.message);
 
                             Some(Ok(vec![LanguageModelStreamChunk::Delta(
@@ -294,10 +278,7 @@ impl LanguageModel for Anthropic {
                         }
                         _ => None,
                     },
-                    Err(e) => {
-                        state.completed = true;
-                        Some(Err(e))
-                    }
+                    Err(e) => Some(Err(e)),
                 })
             },
         );

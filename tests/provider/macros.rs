@@ -8,6 +8,9 @@ pub struct ProviderConfig {
     /// Default model for general tests
     pub default_model: &'static str,
 
+    /// Tool model for tool tests
+    pub tool_model: Option<&'static str>,
+
     /// Model for reasoning-specific tests (optional)
     pub reasoning_model: Option<&'static str>,
 
@@ -39,7 +42,7 @@ impl ProviderConfig {
 
     /// Get the appropriate model for tool tests
     pub fn tool_model(&self) -> &str {
-        self.default_model
+        self.tool_model.unwrap_or(self.default_model)
     }
 
     /// Get the appropriate model for streaming tests
@@ -287,17 +290,17 @@ macro_rules! generate_language_model_stop_reason_tests {
             skip_if_no_api_key!();
 
             let result = LanguageModelRequest::builder()
-                .model(<$provider_type>::new($config.basic_model()))
-                .prompt("Tell me a short story.")
-                .stop_when(|_| true) // Always stop
-                .build()
-                .generate_text()
-                .await;
+             .model(<$provider_type>::new($config.basic_model()))
+             .prompt("just response with 'HI' nothing less nothing more")
+             .stop_when(|_| true) // Always stop
+             .build()
+             .generate_text()
+             .await;
 
             assert!(result.is_ok());
             let response = result.unwrap();
             assert!(matches!(response.stop_reason(), Some(StopReason::Hook)));
-        }
+         }
 
         #[tokio::test]
         async fn test_stop_reason_api_error() {
@@ -386,13 +389,14 @@ macro_rules! generate_language_model_streaming_tests {
             let mut stream = response.stream;
             let mut chunks_received = 0;
             while let Some(chunk) = stream.next().await {
-                chunks_received += 1;
-                // Just verify we get chunks
-                let _ = chunk;
+                if let LanguageModelStreamChunkType::Text(_) = chunk {
+                    chunks_received += 1;
+                }
             }
 
             assert!(chunks_received > 0);
         }
+
     };
 }
 
@@ -426,6 +430,32 @@ macro_rules! generate_language_model_tool_tests {
         }
 
         #[tokio::test]
+        async fn test_generate_text_with_tools_input() {
+            skip_if_no_api_key!();
+
+            #[tool]
+            /// Returns the username
+            fn get_username(user_id: String) -> Tool {
+                match user_id.as_str() {
+                    "123" => Ok("sura".to_string()),
+                    _ => Ok("invalid".to_string()),
+                }
+            }
+
+            let response = LanguageModelRequest::builder()
+                .model(<$provider_type>::new($config.tool_model()))
+                .system("you are a helpful assistant.")
+                .prompt("What is the username with user id 123?")
+                .with_tool(get_username())
+                .build()
+                .generate_text()
+                .await
+                .unwrap();
+
+            assert!(response.text().unwrap().contains("sura"));
+        }
+
+        #[tokio::test]
         async fn test_generate_stream_with_tools() {
             skip_if_no_api_key!();
 
@@ -455,6 +485,41 @@ macro_rules! generate_language_model_tool_tests {
             }
 
             assert!(buf.contains("ishak"));
+        }
+
+        #[tokio::test]
+        async fn test_generate_stream_with_tools_input() {
+            skip_if_no_api_key!();
+
+            #[tool]
+            /// Returns the username
+            fn get_username(user_id: String) -> Tool {
+                match user_id.as_str() {
+                    "123" => Ok("sura".to_string()),
+                    _ => Ok("invalid".to_string()),
+                }
+            }
+
+            let response = LanguageModelRequest::builder()
+                .model(<$provider_type>::new($config.tool_model()))
+                .system("You are a helpful assistant.")
+                .prompt("What is the username for user id 123?")
+                .with_tool(get_username())
+                .build()
+                .stream_text()
+                .await
+                .unwrap();
+
+            let mut stream = response.stream;
+
+            let mut buf = String::new();
+            while let Some(chunk) = stream.next().await {
+                if let LanguageModelStreamChunkType::Text(text) = chunk {
+                    buf.push_str(&text);
+                }
+            }
+
+            assert!(buf.contains("sura"));
         }
     };
 }
@@ -522,8 +587,6 @@ macro_rules! generate_language_model_schema_tests {
                     buf.push_str(&text);
                 }
             }
-
-            println!("buf: {}", buf);
 
             let user: User = serde_json::from_str(&buf).unwrap();
 

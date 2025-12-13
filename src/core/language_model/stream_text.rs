@@ -35,46 +35,58 @@ impl<M: LanguageModel> LanguageModelRequest<M> {
         };
 
         let (tx, stream) = LanguageModelStream::new();
-        let _ = tx.send(LanguageModelStreamChunkType::Start);
+        let _ = tx.send(LanguageModelStreamChunkType::Start).await;
 
-        loop {
-            // Update the current step
-            options.current_step_id += 1;
+        let mut model = self.model.clone();
 
-            // Prepare the next step
-            if let Some(hook) = options.on_step_start.clone() {
-                hook(&mut options);
-            }
+        tokio::spawn(async move {
+            loop {
+                // Update the current step
+                options.current_step_id += 1;
 
-            let mut response = self
-                .model
-                .stream_text(options.clone())
-                .await
-                .inspect_err(|e| {
-                    options.stop_reason = Some(StopReason::Error(e.clone()));
-                })?;
+                // Prepare the next step
+                if let Some(hook) = options.on_step_start.clone() {
+                    hook(&mut options);
+                }
 
-            while let Some(ref chunk) = response.next().await {
-                match chunk {
-                    Ok(chunk) => {
-                        for output in chunk {
-                            match output {
-                                LanguageModelStreamChunk::Done(final_msg) => {
-                                    match final_msg.content {
-                                        LanguageModelResponseContentType::Text(_) => {
-                                            let assistant_msg =
-                                                Message::Assistant(AssistantMessage {
-                                                    content: final_msg.content.clone(),
-                                                    usage: final_msg.usage.clone(),
-                                                });
-                                            options.messages.push(TaggedMessage::new(
-                                                options.current_step_id,
-                                                assistant_msg,
-                                            ));
-                                            options.stop_reason = Some(StopReason::Finish);
-                                        }
-                                        LanguageModelResponseContentType::Reasoning(ref reason) => {
-                                            options.messages.push(TaggedMessage::new(
+                let response_result = model.stream_text(options.clone()).await;
+                let mut response = match response_result {
+                    Ok(r) => r,
+                    Err(e) => {
+                        options.stop_reason = Some(StopReason::Error(e.clone()));
+                        let _ = tx
+                            .send(LanguageModelStreamChunkType::Failed(format!(
+                                "Model streaming failed: {}",
+                                e
+                            )))
+                            .await;
+                        return Err(e);
+                    }
+                };
+
+                while let Some(ref chunk) = response.next().await {
+                    match chunk {
+                        Ok(chunk) => {
+                            for output in chunk {
+                                match output {
+                                    LanguageModelStreamChunk::Done(final_msg) => {
+                                        match final_msg.content {
+                                            LanguageModelResponseContentType::Text(_) => {
+                                                let assistant_msg =
+                                                    Message::Assistant(AssistantMessage {
+                                                        content: final_msg.content.clone(),
+                                                        usage: final_msg.usage.clone(),
+                                                    });
+                                                options.messages.push(TaggedMessage::new(
+                                                    options.current_step_id,
+                                                    assistant_msg,
+                                                ));
+                                                options.stop_reason = Some(StopReason::Finish);
+                                            }
+                                            LanguageModelResponseContentType::Reasoning(
+                                                ref reason,
+                                            ) => {
+                                                options.messages.push(TaggedMessage::new(
                                                 options.current_step_id,
                                                 Message::Assistant(AssistantMessage {
                                                     content:
@@ -82,58 +94,72 @@ impl<M: LanguageModel> LanguageModelRequest<M> {
                                                             reason.clone(),
                                                         ),
                                                     usage: final_msg.usage.clone(),
-                                                }),
+                                                    }),
+                                                ));
+                                                options.stop_reason = Some(StopReason::Finish);
+                                            }
+                                            LanguageModelResponseContentType::ToolCall(
+                                                ref tool_info,
+                                            ) => {
+                                                // add tool message
+                                                let usage = final_msg.usage.clone();
+                                                let _ = &options.messages.push(TaggedMessage::new(
+                                                    options.current_step_id.to_owned(),
+                                                    Message::Assistant(AssistantMessage::new(
+                                                        LanguageModelResponseContentType::ToolCall(
+                                                            tool_info.clone(),
+                                                        ),
+                                                        usage,
+                                                    )),
+                                                ));
+                                                options.handle_tool_call(tool_info).await;
+                                            }
+                                            _ => {}
+                                        }
+
+                                        // Finish the step
+                                        if let Some(ref hook) = options.on_step_finish {
+                                            hook(&options);
+                                        }
+
+                                        // Stop If
+                                        if let Some(hook) = &options.stop_when.clone()
+                                            && hook(&options)
+                                        {
+                                            let _ = tx
+                                                .send(LanguageModelStreamChunkType::Incomplete(
+                                                    "Stopped by hook".to_string(),
+                                                ))
+                                                .await;
+                                            options.stop_reason = Some(StopReason::Hook);
+                                            break;
+                                        }
+
+                                        let _ = tx
+                                            .send(LanguageModelStreamChunkType::End(
+                                                final_msg.clone(),
                                             ))
-                                        }
-                                        LanguageModelResponseContentType::ToolCall(
-                                            ref tool_info,
-                                        ) => {
-                                            // add tool message
-                                            let usage = final_msg.usage.clone();
-                                            let _ = &options.messages.push(TaggedMessage::new(
-                                                options.current_step_id.to_owned(),
-                                                Message::Assistant(AssistantMessage::new(
-                                                    LanguageModelResponseContentType::ToolCall(
-                                                        tool_info.clone(),
-                                                    ),
-                                                    usage,
-                                                )),
-                                            ));
-                                            options.handle_tool_call(tool_info).await;
-                                        }
-                                        _ => {}
+                                            .await;
                                     }
-
-                                    // Finish the step
-                                    if let Some(ref hook) = options.on_step_finish {
-                                        hook(&options);
+                                    LanguageModelStreamChunk::Delta(other) => {
+                                        let _ = tx.send(other.clone()).await; // propagate chunks
                                     }
-
-                                    // Stop If
-                                    if let Some(hook) = &options.stop_when.clone()
-                                        && hook(&options)
-                                    {
-                                        let _ = tx.send(LanguageModelStreamChunkType::Incomplete(
-                                            "Stopped by hook".to_string(),
-                                        ));
-                                        options.stop_reason = Some(StopReason::Hook);
-                                        break;
-                                    }
-
-                                    let _ = tx
-                                        .send(LanguageModelStreamChunkType::End(final_msg.clone()));
-                                }
-                                LanguageModelStreamChunk::Delta(other) => {
-                                    let _ = tx.send(other.clone()); // propagate chunks
                                 }
                             }
                         }
+                        Err(e) => {
+                            let _ = tx
+                                .send(LanguageModelStreamChunkType::Failed(e.to_string()))
+                                .await;
+                            options.stop_reason = Some(StopReason::Error(e.clone()));
+                            break;
+                        }
                     }
-                    Err(e) => {
-                        let _ = tx.send(LanguageModelStreamChunkType::Failed(e.to_string()));
-                        options.stop_reason = Some(StopReason::Error(e.clone()));
-                        break;
-                    }
+
+                    match options.stop_reason {
+                        None => {}
+                        _ => break,
+                    };
                 }
 
                 match options.stop_reason {
@@ -142,15 +168,12 @@ impl<M: LanguageModel> LanguageModelRequest<M> {
                 };
             }
 
-            match options.stop_reason {
-                None => {}
-                _ => break,
-            };
-        }
+            drop(tx);
 
-        drop(tx);
+            Ok(())
+        });
 
-        let result = StreamTextResponse { stream, options };
+        let result = StreamTextResponse { stream };
 
         Ok(result)
     }
@@ -164,14 +187,15 @@ impl<M: LanguageModel> LanguageModelRequest<M> {
 pub struct StreamTextResponse {
     /// A stream of responses from the language model.
     pub stream: LanguageModelStream,
-    /// The reason the model stopped generating text.
-    options: LanguageModelOptions,
+    // The reason the model stopped generating text.
+    // options: LanguageModelOptions, // TODO: fix this
 }
 
 impl StreamTextResponse {
     #[cfg(any(test, feature = "test-access"))]
     pub fn step_ids(&self) -> Vec<usize> {
-        self.options.messages.iter().map(|t| t.step_id).collect()
+        // self.options.messages.iter().map(|t| t.step_id).collect()
+        todo!()
     }
 }
 
@@ -179,6 +203,7 @@ impl Deref for StreamTextResponse {
     type Target = LanguageModelOptions;
 
     fn deref(&self) -> &Self::Target {
-        &self.options
+        // &self.options
+        todo!()
     }
 }

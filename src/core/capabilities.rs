@@ -45,3 +45,32 @@ pub trait AudioOutputSupport {}
 
 /// Marker traits for models that support image output.
 pub trait ImageOutputSupport {}
+
+/// Macro to define model capabilities for a provider
+#[macro_export]
+macro_rules! model_capabilities {
+    (
+        provider: $provider:ident,
+        models: {
+            $(
+                $model:ident {
+                    model_name: $model_name:literal,
+                    capabilities: [$($capability:ident),* $(,)?]
+                }
+            ),* $(,)?
+        }
+    ) => {
+        $(
+            #[derive(Debug, Clone)]
+            pub struct $model;
+
+            impl ModelName for $model {
+                const MODEL_NAME: &'static str = $model_name;
+            }
+
+            $(
+                impl $capability for $provider<$model> {}
+            )*
+        )*
+    };
+}

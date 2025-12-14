@@ -1,10 +1,12 @@
 //! This module provides the Anthropic provider, which implements the `LanguageModel`
 //! and `Provider` traits for interacting with the Anthropic API.
 
+pub mod capabilities;
 pub mod client;
 pub mod conversions;
 pub mod settings;
 
+use crate::core::capabilities::ModelName;
 use crate::core::client::Client;
 use crate::core::language_model::{
     LanguageModelOptions, LanguageModelResponse, LanguageModelResponseContentType,
@@ -33,34 +35,42 @@ pub const ANTHROPIC_API_VERSION: &str = "2023-06-01";
 
 /// The Anthropic provider.
 #[derive(Debug, Serialize, Clone)]
-pub struct Anthropic {
+pub struct Anthropic<M: ModelName> {
     pub settings: AnthropicProviderSettings,
     options: AnthropicOptions,
+    _phantom: std::marker::PhantomData<M>,
 }
 
-impl Anthropic {
-    /// Creates a new `Anthropic` provider with the given settings.
-    pub fn new(model_name: impl Into<String>) -> Self {
-        AnthropicProviderSettingsBuilder::default()
-            .model_name(model_name.into())
-            .build()
-            .expect("Failed to build AnthropicProviderSettings")
+impl<M: ModelName> Anthropic<M> {
+    /// Creates a new AnthropAI provider with default settings.
+    pub fn default() -> Self {
+        let settings = AnthropicProviderSettings::default();
+        let mut options = AnthropicOptions::default();
+        options.model = M::MODEL_NAME.to_string();
+
+        Self {
+            settings,
+            options,
+            _phantom: std::marker::PhantomData,
+        }
     }
 
     /// Anthropic provider setting builder.
-    pub fn builder() -> AnthropicProviderSettingsBuilder {
-        AnthropicProviderSettings::builder()
+    pub fn builder() -> AnthropicProviderSettingsBuilder<M> {
+        AnthropicProviderSettingsBuilder::default()
     }
 }
 
-impl Provider for Anthropic {}
+impl<M: ModelName> Provider for Anthropic<M> {}
 
 #[async_trait]
-impl LanguageModel for Anthropic {
+impl<M: ModelName> LanguageModel for Anthropic<M> {
+    /// Returns the name of the model.
     fn name(&self) -> String {
         self.options.model.clone()
     }
 
+    /// Generates text using the Anthropic provider.
     async fn generate_text(
         &mut self,
         options: LanguageModelOptions,
@@ -90,7 +100,7 @@ impl LanguageModel for Anthropic {
                 }
                 AnthropicContentBlock::ToolUse { id, input, name } => {
                     collected.push(LanguageModelResponseContentType::ToolCall(ToolCallInfo {
-                        input,
+                        input: serde_json::from_str(&input).unwrap_or_default(),
                         tool: ToolDetails {
                             id: id.to_string(),
                             name: name.to_string(),
@@ -106,6 +116,7 @@ impl LanguageModel for Anthropic {
         })
     }
 
+    /// Streams text using the Anthropic provider.
     async fn stream_text(&mut self, options: LanguageModelOptions) -> Result<ProviderStream> {
         let mut options: AnthropicOptions = options.into();
         options.stream = Some(true);
@@ -286,3 +297,6 @@ impl LanguageModel for Anthropic {
         Ok(Box::pin(stream))
     }
 }
+
+// Re-exports for convenience
+pub use capabilities::*;

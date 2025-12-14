@@ -2,7 +2,7 @@ pub mod types;
 
 pub use types::*;
 
-use crate::Error;
+use crate::{Error, core::capabilities::ModelName};
 use derive_builder::Builder;
 use reqwest::header::CONTENT_TYPE;
 use reqwest_eventsource::Event;
@@ -35,7 +35,7 @@ impl AnthropicOptions {
     }
 }
 
-impl Client for Anthropic {
+impl<M: ModelName> Client for Anthropic<M> {
     type Response = AnthropicMessageResponse;
     type StreamEvent = AnthropicStreamEvent;
 

@@ -4,6 +4,7 @@ use reqwest::{IntoUrl, Url};
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    core::capabilities::ModelName,
     error::Error,
     providers::anthropic::{Anthropic, AnthropicOptions},
 };
@@ -22,20 +23,28 @@ pub struct AnthropicProviderSettings {
 }
 
 impl AnthropicProviderSettings {
+    pub fn default() -> Self {
+        Self {
+            base_url: Url::parse("https://api.anthropic.com/v1/").unwrap(),
+            api_key: std::env::var("ANTHROPIC_API_KEY").unwrap_or_default(),
+            provider_name: "anthropic".to_string(),
+        }
+    }
+
     /// Creates a new builder for `AnthropicProviderSettings`.
-    pub fn builder() -> AnthropicProviderSettingsBuilder {
+    pub fn builder<M: ModelName>() -> AnthropicProviderSettingsBuilder<M> {
         AnthropicProviderSettingsBuilder::default()
     }
 }
 
-pub struct AnthropicProviderSettingsBuilder {
+pub struct AnthropicProviderSettingsBuilder<M: ModelName> {
     base_url: Option<Url>,
     api_key: Option<String>,
     provider_name: Option<String>,
-    model_name: Option<String>,
+    _phantom: std::marker::PhantomData<M>,
 }
 
-impl AnthropicProviderSettingsBuilder {
+impl<M: ModelName> AnthropicProviderSettingsBuilder<M> {
     pub fn base_url(mut self, base_url: impl IntoUrl) -> Self {
         self.base_url = Some(base_url.into_url().expect("Invalid base URL"));
         self
@@ -51,12 +60,7 @@ impl AnthropicProviderSettingsBuilder {
         self
     }
 
-    pub fn model_name(mut self, model_name: impl Into<String>) -> Self {
-        self.model_name = Some(model_name.into());
-        self
-    }
-
-    pub fn build(self) -> Result<Anthropic, Error> {
+    pub fn build(self) -> Result<Anthropic<M>, Error> {
         let settings = AnthropicProviderSettings {
             base_url: self.base_url.expect("Missing base URL"),
             api_key: self.api_key.unwrap_or_default(),
@@ -68,20 +72,22 @@ impl AnthropicProviderSettingsBuilder {
         Ok(Anthropic {
             settings,
             options: AnthropicOptions::builder()
-                .model(self.model_name.expect("Missing model name"))
+                .model(M::MODEL_NAME.to_string())
                 .build()
                 .unwrap(),
+            _phantom: std::marker::PhantomData,
         })
     }
 }
 
-impl Default for AnthropicProviderSettingsBuilder {
+impl<M: ModelName> Default for AnthropicProviderSettingsBuilder<M> {
     fn default() -> Self {
+        let settings = AnthropicProviderSettings::default();
         Self {
-            base_url: Some(Url::parse("https://api.anthropic.com/v1/").unwrap()),
-            api_key: Some(std::env::var("ANTHROPIC_API_KEY").unwrap_or_default()),
-            provider_name: Some("anthropic".to_string()),
-            model_name: Some("claude-4-sonnet".to_string()),
+            base_url: Some(settings.base_url),
+            api_key: Some(settings.api_key),
+            provider_name: Some(settings.provider_name),
+            _phantom: std::marker::PhantomData,
         }
     }
 }

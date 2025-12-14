@@ -2,10 +2,10 @@
 
 pub mod settings;
 
+use crate::core::capabilities::ModelName;
 use crate::core::language_model::{
     LanguageModel, LanguageModelOptions, LanguageModelResponse, ProviderStream,
 };
-use crate::core::provider::Provider;
 use crate::error::Result;
 use crate::providers::groq::settings::{GroqProviderSettings, GroqProviderSettingsBuilder};
 use crate::providers::openai::OpenAI;
@@ -13,33 +13,32 @@ use async_trait::async_trait;
 
 /// The Groq provider, wrapping OpenAI.
 #[derive(Debug, Clone)]
-pub struct Groq {
-    inner: OpenAI,
+pub struct Groq<M: ModelName> {
+    inner: OpenAI<M>,
 }
 
-impl Groq {
+impl<M: ModelName> Groq<M> {
     /// Creates a new Groq provider with default settings.
-    pub fn new(model_name: impl Into<String>) -> Self {
-        GroqProviderSettingsBuilder::default()
-            .model_name(model_name.into())
-            .build()
-            .expect("Failed to build GroqProviderSettings")
+    pub fn default() -> Groq<M> {
+        Groq {
+            inner: OpenAI::<M>::default(),
+        }
     }
 
     /// Groq provider setting builder.
-    pub fn builder() -> GroqProviderSettingsBuilder {
+    pub fn builder() -> GroqProviderSettingsBuilder<M> {
         GroqProviderSettings::builder()
     }
 }
 
-impl Provider for Groq {}
-
 #[async_trait]
-impl LanguageModel for Groq {
+impl<M: ModelName> LanguageModel for Groq<M> {
+    /// Returns the name of the model.
     fn name(&self) -> String {
         self.inner.name()
     }
 
+    /// Generates text using the Groq provider.
     async fn generate_text(
         &mut self,
         options: LanguageModelOptions,
@@ -47,6 +46,7 @@ impl LanguageModel for Groq {
         self.inner.generate_text(options).await
     }
 
+    /// Streams text using the Groq provider.
     async fn stream_text(&mut self, options: LanguageModelOptions) -> Result<ProviderStream> {
         self.inner.stream_text(options).await
     }

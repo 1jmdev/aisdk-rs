@@ -91,7 +91,7 @@ pub enum AnthropicContentBlock {
     #[serde(rename = "tool_use")]
     ToolUse {
         id: String,
-        input: serde_json::Value, // TODO: not sure if this is 'Value' check with Anthropic docs
+        input: String,
         name: String,
     },
 }

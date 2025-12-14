@@ -1,20 +1,23 @@
 //! This module provides the OpenAI provider, which implements the `LanguageModel`
 //! and `Provider` traits for interacting with the OpenAI API.
 
+pub mod capabilities;
 pub mod client;
 pub mod conversions;
 pub mod settings;
 
+use crate::core::capabilities::ModelName;
 use crate::core::client::Client;
 use crate::core::language_model::{
     LanguageModelOptions, LanguageModelResponse, LanguageModelResponseContentType,
     LanguageModelStreamChunk, LanguageModelStreamChunkType, ProviderStream, Usage,
 };
 use crate::core::messages::AssistantMessage;
+
 use crate::providers::openai::client::{OpenAIOptions, types};
 use crate::providers::openai::settings::{OpenAIProviderSettings, OpenAIProviderSettingsBuilder};
 use crate::{
-    core::{language_model::LanguageModel, provider::Provider, tools::ToolCallInfo},
+    core::{language_model::LanguageModel, tools::ToolCallInfo},
     error::Result,
 };
 use async_trait::async_trait;
@@ -22,34 +25,39 @@ use futures::StreamExt;
 
 /// The OpenAI provider.
 #[derive(Debug, Clone)]
-pub struct OpenAI {
+pub struct OpenAI<M: ModelName> {
     options: OpenAIOptions,
     settings: OpenAIProviderSettings,
+    _phantom: std::marker::PhantomData<M>,
 }
 
-impl OpenAI {
-    /// Creates a new `OpenAI` provider with the given settings.
-    pub fn new(model_name: impl Into<String>) -> Self {
-        OpenAIProviderSettingsBuilder::default()
-            .model_name(model_name.into())
-            .build()
-            .expect("Failed to build OpenAIProviderSettings")
-    }
+impl<M: ModelName> OpenAI<M> {
+    /// Creates a new OpenAI provider with default settings.
+    pub fn default() -> Self {
+        let settings = OpenAIProviderSettings::default();
+        let mut options = OpenAIOptions::default();
+        options.model = M::MODEL_NAME.to_string();
 
+        Self {
+            settings,
+            options,
+            _phantom: std::marker::PhantomData,
+        }
+    }
     /// OpenAI provider setting builder.
-    pub fn builder() -> OpenAIProviderSettingsBuilder {
-        OpenAIProviderSettings::builder()
+    pub fn builder() -> OpenAIProviderSettingsBuilder<M> {
+        OpenAIProviderSettingsBuilder::default()
     }
 }
-
-impl Provider for OpenAI {}
 
 #[async_trait]
-impl LanguageModel for OpenAI {
+impl<M: ModelName> LanguageModel for OpenAI<M> {
+    /// Returns the name of the model.
     fn name(&self) -> String {
         self.options.model.clone()
     }
 
+    /// Generates text using the OpenAI provider.
     async fn generate_text(
         &mut self,
         options: LanguageModelOptions,
@@ -93,6 +101,7 @@ impl LanguageModel for OpenAI {
         })
     }
 
+    /// Streams text using the OpenAI provider.
     async fn stream_text(&mut self, options: LanguageModelOptions) -> Result<ProviderStream> {
         let mut options: OpenAIOptions = options.into();
         options.model = self.options.model.to_string();
@@ -193,3 +202,6 @@ impl LanguageModel for OpenAI {
         Ok(Box::pin(stream))
     }
 }
+
+// Re-exports for convenience
+pub use capabilities::*;

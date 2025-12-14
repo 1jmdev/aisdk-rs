@@ -6,6 +6,7 @@
 //! unified interface for various operations like text generation or streaming.
 
 use crate::core::Message;
+use crate::core::capabilities::*;
 use crate::core::language_model::{LanguageModel, LanguageModelOptions};
 use crate::core::tools::Tool;
 use schemars::{JsonSchema, schema_for};
@@ -151,7 +152,10 @@ impl<M: LanguageModel> LanguageModelRequestBuilder<M, SystemStage> {
 
 /// ConversationStage Builder
 impl<M: LanguageModel> LanguageModelRequestBuilder<M, ConversationStage> {
-    pub fn prompt(self, prompt: impl Into<String>) -> LanguageModelRequestBuilder<M, OptionsStage> {
+    pub fn prompt(self, prompt: impl Into<String>) -> LanguageModelRequestBuilder<M, OptionsStage>
+    where
+        M: TextInputSupport,
+    {
         LanguageModelRequestBuilder {
             model: self.model,
             prompt: Some(prompt.into()),
@@ -160,7 +164,10 @@ impl<M: LanguageModel> LanguageModelRequestBuilder<M, ConversationStage> {
         }
     }
 
-    pub fn messages(self, messages: Vec<Message>) -> LanguageModelRequestBuilder<M, OptionsStage> {
+    pub fn messages(self, messages: Vec<Message>) -> LanguageModelRequestBuilder<M, OptionsStage>
+    where
+        M: TextInputSupport,
+    {
         LanguageModelRequestBuilder {
             model: self.model,
             prompt: self.prompt,
@@ -174,7 +181,10 @@ impl<M: LanguageModel> LanguageModelRequestBuilder<M, ConversationStage> {
 }
 /// OptionsStage Builder
 impl<M: LanguageModel> LanguageModelRequestBuilder<M, OptionsStage> {
-    pub fn schema<T: JsonSchema>(mut self) -> Self {
+    pub fn schema<T: JsonSchema>(mut self) -> Self
+    where
+        M: StructuredOutputSupport,
+    {
         self.schema = Some(schema_for!(T));
         self
     }
@@ -213,7 +223,10 @@ impl<M: LanguageModel> LanguageModelRequestBuilder<M, OptionsStage> {
         self
     }
 
-    pub fn with_tool(mut self, tool: Tool) -> Self {
+    pub fn with_tool(mut self, tool: Tool) -> Self
+    where
+        M: ToolCallSupport,
+    {
         self.tools.get_or_insert_default().add_tool(tool);
         self
     }
@@ -245,7 +258,10 @@ impl<M: LanguageModel> LanguageModelRequestBuilder<M, OptionsStage> {
     pub fn reasoning_effort(
         mut self,
         reasoning_effort: impl Into<crate::core::language_model::ReasoningEffort>,
-    ) -> Self {
+    ) -> Self
+    where
+        M: ReasoningSupport,
+    {
         self.reasoning_effort = Some(reasoning_effort.into());
         self
     }

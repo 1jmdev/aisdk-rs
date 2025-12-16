@@ -103,6 +103,32 @@ macro_rules! generate_provider_has_default_interface {
 
             // check if provider didn't throw an error
             assert!(provider.is_ok());
+
+            // check provider settings
+            let provider = provider.unwrap();
+            assert_eq!(provider.settings.provider_name, "test-provider");
+            assert_eq!(provider.settings.api_key, "test-api-key");
+            assert_eq!(provider.settings.base_url, "http://localhost:8080/");
+
+            // should fail on invalid base url
+            let provider2 = $provider_type::<$model_struct>::builder()
+                .provider_name("test-provider2".to_string())
+                .api_key("test-api-key2")
+                .base_url("ocalhost:80802".to_string())
+                .build();
+
+            assert!(provider2.is_err());
+            assert_eq!(provider2.unwrap_err().to_string(), "Invalid input: Base URL must start with http:// or https://");
+
+            // should fail on empty api key
+            let provider3 = $provider_type::<$model_struct>::builder()
+                .provider_name("test-provider3".to_string())
+                .api_key("")
+                .base_url("http://localhost:8080/".to_string())
+                .build();
+
+            assert!(provider3.is_err());
+            assert_eq!(provider3.unwrap_err().to_string(), "A required field is missing: api_key");
         }
     };
 }

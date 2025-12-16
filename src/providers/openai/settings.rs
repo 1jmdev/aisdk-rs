@@ -1,7 +1,5 @@
 //! Defines the settings for the OpenAI provider.
 
-use reqwest::{IntoUrl, Url};
-
 use crate::{
     error::Error,
     providers::openai::{ModelName, OpenAI, client::OpenAIOptions},
@@ -11,7 +9,7 @@ use crate::{
 #[derive(Debug, Clone)]
 pub struct OpenAIProviderSettings {
     /// The API base URL for the OpenAI API.
-    pub base_url: Url,
+    pub base_url: String,
 
     /// The API key for the OpenAI API.
     pub api_key: String,
@@ -24,7 +22,7 @@ impl Default for OpenAIProviderSettings {
     /// Returns the default settings for the OpenAI provider.
     fn default() -> Self {
         Self {
-            base_url: Url::parse("https://api.openai.com/v1/").unwrap(),
+            base_url: "https://api.openai.com/v1/".to_string(),
             api_key: std::env::var("OPENAI_API_KEY").unwrap_or_default(),
             provider_name: "openai".to_string(),
         }
@@ -40,7 +38,7 @@ impl OpenAIProviderSettings {
 
 pub struct OpenAIProviderSettingsBuilder<M: ModelName> {
     /// The base URL for the OpenAI API.
-    base_url: Option<Url>,
+    base_url: Option<String>,
 
     /// The API key for the OpenAI API.
     api_key: Option<String>,
@@ -53,8 +51,8 @@ pub struct OpenAIProviderSettingsBuilder<M: ModelName> {
 
 impl<M: ModelName> OpenAIProviderSettingsBuilder<M> {
     /// Sets the base URL for the OpenAI API.
-    pub fn base_url(mut self, base_url: impl IntoUrl) -> Self {
-        self.base_url = Some(base_url.into_url().expect("Invalid base URL"));
+    pub fn base_url(mut self, base_url: impl Into<String>) -> Self {
+        self.base_url = Some(base_url.into());
         self
     }
 

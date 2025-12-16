@@ -72,7 +72,7 @@ impl<M: ModelName> LanguageModel for OpenAI<M> {
 
         self.options = options;
 
-        let response: client::OpenAiResponse = self.send(self.settings.base_url.clone()).await?;
+        let response: client::OpenAiResponse = self.send(&self.settings.base_url).await?;
 
         let mut collected: Vec<LanguageModelResponseContentType> = Vec::new();
 
@@ -114,7 +114,7 @@ impl<M: ModelName> LanguageModel for OpenAI<M> {
 
         self.options = options;
 
-        let openai_stream = self.send_and_stream(self.settings.base_url.clone()).await?;
+        let openai_stream = self.send_and_stream(&self.settings.base_url).await?;
 
         let stream = openai_stream.map(|evt_res| match evt_res {
             Ok(client::OpenAiStreamEvent::ResponseOutputTextDelta { delta, .. }) => {

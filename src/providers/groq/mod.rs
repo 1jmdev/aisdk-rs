@@ -1,57 +1,94 @@
-//! This module provides the Groq provider, wrapping OpenAI for Groq branding.
+//! This module provides the Groq provider, wrapping OpenAI for Groq requests.
 
 pub mod capabilities;
+pub mod language_model;
 pub mod settings;
 
+use crate::Error;
 use crate::core::capabilities::ModelName;
-use crate::core::language_model::{
-    LanguageModel, LanguageModelOptions, LanguageModelResponse, ProviderStream,
-};
+use crate::core::utils::validate_base_url;
 use crate::error::Result;
-use crate::providers::groq::settings::{GroqProviderSettings, GroqProviderSettingsBuilder};
+use crate::providers::groq::settings::GroqProviderSettings;
 use crate::providers::openai::OpenAI;
-use async_trait::async_trait;
 
 /// The Groq provider, wrapping OpenAI.
 #[derive(Debug, Clone)]
 pub struct Groq<M: ModelName> {
+    pub settings: GroqProviderSettings,
     inner: OpenAI<M>,
 }
 
 impl<M: ModelName> Groq<M> {
     /// Groq provider setting builder.
-    pub fn builder() -> GroqProviderSettingsBuilder<M> {
-        GroqProviderSettings::builder()
+    pub fn builder() -> GroqBuilder<M> {
+        GroqBuilder::default()
     }
 }
 
 impl<M: ModelName> Default for Groq<M> {
     /// Creates a new Groq provider with default settings.
     fn default() -> Groq<M> {
-        Groq {
-            inner: OpenAI::<M>::default(),
-        }
+        GroqBuilder::default().build().unwrap()
     }
 }
 
-#[async_trait]
-impl<M: ModelName> LanguageModel for Groq<M> {
-    /// Returns the name of the model.
-    fn name(&self) -> String {
-        self.inner.name()
+/// Groq provider builder
+pub struct GroqBuilder<M: ModelName> {
+    settings: GroqProviderSettings,
+    inner: OpenAI<M>,
+}
+
+impl<M: ModelName> Default for GroqBuilder<M> {
+    /// Creates a new Groq provider with default settings.
+    fn default() -> Self {
+        let settings = GroqProviderSettings::default();
+        let inner = OpenAI::<M>::builder()
+            .provider_name(&settings.provider_name)
+            .base_url(settings.base_url.clone())
+            .api_key(&settings.api_key)
+            .build()
+            .unwrap();
+
+        Self { settings, inner }
+    }
+}
+
+impl<M: ModelName> GroqBuilder<M> {
+    /// set the provider name for the Groq provider
+    pub fn provider_name(mut self, provider_name: impl Into<String>) -> Self {
+        self.settings.provider_name = provider_name.into();
+        self
     }
 
-    /// Generates text using the Groq provider.
-    async fn generate_text(
-        &mut self,
-        options: LanguageModelOptions,
-    ) -> Result<LanguageModelResponse> {
-        self.inner.generate_text(options).await
+    /// set the base url for the Groq provider
+    pub fn base_url(mut self, base_url: impl Into<String>) -> Self {
+        self.settings.base_url = base_url.into();
+        self
     }
 
-    /// Streams text using the Groq provider.
-    async fn stream_text(&mut self, options: LanguageModelOptions) -> Result<ProviderStream> {
-        self.inner.stream_text(options).await
+    /// set the api key for the Groq provider
+    pub fn api_key(mut self, api_key: impl Into<String>) -> Self {
+        self.settings.api_key = api_key.into();
+        self
+    }
+
+    /// build the Groq provider
+    pub fn build(self) -> Result<Groq<M>> {
+        // validate base url
+        let base_url = validate_base_url(&self.settings.base_url)?;
+
+        // check api key exists
+        if self.settings.api_key.is_empty() {
+            return Err(Error::MissingField("api_key".to_string()));
+        }
+
+        Ok(Groq {
+            settings: GroqProviderSettings {
+                base_url: base_url.to_string(),
+                ..self.settings
+            },
+            inner: self.inner,
+        })
     }
 }
 

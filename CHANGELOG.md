@@ -19,6 +19,7 @@ Changelog entries are grouped by type, with the following types:
 ### Added
 - Async accessor methods to `StreamTextResponse` for thread-safe data retrieval (`messages()`, `steps()`, `usage()`, etc.)
 - Added `builder()` method for `Tool` for easier construction
+- `tool` macro is now re-exported from the main `aisdk` crate for easier access
 
 ### Changed
 - Model capabilities are now enforced at compile time via marker traits, preventing invalid feature usage (e.g., tool calls on unsupported models).
@@ -26,6 +27,10 @@ Changelog entries are grouped by type, with the following types:
 - User does not need to import `aisdk::core::tools::ToolExecute` anymore to work with the tool macro
 - `LanguageModel` trait now requires `Clone + 'static` bounds (all providers must implement `Clone`)
 - Streaming implementation now uses `tokio::sync::mpsc` instead of `std::sync::mpsc`
+- **BREAKING**: Import path for `tool` macro has changed from `use aisdk_macros::tool` to `use aisdk::tool`
+    - Users should update their imports from `aisdk_macros::tool` to `aisdk::tool`
+    - The `aisdk-macros` crate no longer needs to be added as a direct dependency
+
 
 ### Removed
 - Removed the tool macro re-export from `src/core/mod.rs`. User should use `aisdk_macros::tool` directly

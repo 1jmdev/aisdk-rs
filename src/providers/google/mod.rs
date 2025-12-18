@@ -2,50 +2,22 @@
 //! and `Provider` traits for interacting with the Google API.
 
 pub mod capabilities;
-// pub mod client; // TODO: implement
-// pub mod conversions; // TODO: implement
-// pub mod language_model; // TODO: implement
+pub mod client;
+pub mod conversions;
+pub mod language_model;
 pub mod settings;
 
 use crate::core::capabilities::ModelName;
 use crate::core::utils::validate_base_url;
 use crate::error::Error;
+use crate::providers::google::client::GoogleOptions;
 use crate::providers::google::settings::GoogleProviderSettings;
 use serde::Serialize;
-
-// Placeholder for GoogleOptions - TODO: will be moved to client module later
-#[derive(Debug, Clone, Serialize)]
-pub struct GoogleOptions {
-    pub model: String,
-}
-
-impl GoogleOptions {
-    pub fn builder() -> GoogleOptionsBuilder {
-        GoogleOptionsBuilder::default()
-    }
-}
-
-#[derive(Default)]
-pub struct GoogleOptionsBuilder {
-    model: Option<String>,
-}
-
-impl GoogleOptionsBuilder {
-    pub fn model(mut self, model: String) -> Self {
-        self.model = Some(model);
-        self
-    }
-
-    pub fn build(self) -> Result<GoogleOptions, Error> {
-        Ok(GoogleOptions {
-            model: self.model.unwrap_or_default(),
-        })
-    }
-}
 
 /// The Google provider.
 #[derive(Debug, Serialize, Clone)]
 pub struct Google<M: ModelName> {
+    /// Configuration settings for the Google provider.
     pub settings: GoogleProviderSettings,
     options: GoogleOptions,
     _phantom: std::marker::PhantomData<M>,

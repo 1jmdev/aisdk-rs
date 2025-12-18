@@ -53,7 +53,7 @@ model_capabilities! {
             capabilities: [ImageInputSupport, ImageOutputSupport, ReasoningSupport, TextInputSupport, TextOutputSupport]
         },
         Gemini25FlashImagePreview {
-            model_name: "gemini-2.5-flash-image-(preview)",
+            model_name: "gemini-2.5-flash-image-preview",
             constructor_name: gemini_2_5_flash_image_preview,
             display_name: "Gemini 2.5 Flash Image (Preview)",
             capabilities: [ImageInputSupport, ImageOutputSupport, ReasoningSupport, TextInputSupport, TextOutputSupport]
@@ -70,9 +70,9 @@ model_capabilities! {
             display_name: "Gemini 2.5 Flash Lite Preview 06-17",
             capabilities: [AudioInputSupport, ImageInputSupport, ReasoningSupport, TextInputSupport, TextOutputSupport, ToolCallSupport, VideoInputSupport]
         },
-        Gemini25FlashLitePreview0925 {
-            model_name: "gemini-2.5-flash-lite-preview-09-25",
-            constructor_name: gemini_2_5_flash_lite_preview_09_25,
+        Gemini25FlashLitePreview092025 {
+            model_name: "gemini-2.5-flash-lite-preview-09-2025",
+            constructor_name: gemini_2_5_flash_lite_preview_09_2025,
             display_name: "Gemini 2.5 Flash Lite Preview 09-25",
             capabilities: [AudioInputSupport, ImageInputSupport, ReasoningSupport, StructuredOutputSupport, TextInputSupport, TextOutputSupport, ToolCallSupport, VideoInputSupport]
         },
@@ -88,9 +88,9 @@ model_capabilities! {
             display_name: "Gemini 2.5 Flash Preview 05-20",
             capabilities: [AudioInputSupport, ImageInputSupport, ReasoningSupport, StructuredOutputSupport, TextInputSupport, TextOutputSupport, ToolCallSupport, VideoInputSupport]
         },
-        Gemini25FlashPreview0925 {
-            model_name: "gemini-2.5-flash-preview-09-25",
-            constructor_name: gemini_2_5_flash_preview_09_25,
+        Gemini25FlashPreview092025 {
+            model_name: "gemini-2.5-flash-preview-09-2025",
+            constructor_name: gemini_2_5_flash_preview_09_2025,
             display_name: "Gemini 2.5 Flash Preview 09-25",
             capabilities: [AudioInputSupport, ImageInputSupport, ReasoningSupport, StructuredOutputSupport, TextInputSupport, TextOutputSupport, ToolCallSupport, VideoInputSupport]
         },

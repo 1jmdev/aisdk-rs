@@ -36,12 +36,12 @@ futures = "0.3"
 tokio = { version = "1.0", features = ["rt-multi-thread", "macros"] }
 reqwest = { version = "0.12", features = ["json", "stream"] }
 reqwest-eventsource = "0.6.0"
+aisdk-macros = { version = "0.2.1", path = "./macros" }
 
 [dev-dependencies]
 cargo-husky = { version = "1", features = ["precommit-hook", "run-cargo-test", "run-cargo-clippy", "run-cargo-fmt"] }
 dotenv = "0.15.0"
 tempfile = "3.10.1"
-aisdk-macros = { version = "0.2.1", path = "./macros" }
 
 [package.metadata.release]
 pre-release-commit-message = "chore: release {{version}}"

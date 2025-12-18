@@ -10,4 +10,5 @@ pub mod prompt;
 pub mod providers;
 
 // re-exports
+pub use aisdk_macros::tool;
 pub use error::{Error, Result};

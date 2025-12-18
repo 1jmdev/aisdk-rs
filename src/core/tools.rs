@@ -15,7 +15,7 @@
 //! # Example
 //! ```
 //! use aisdk::core::tools::{Tool, ToolExecute};
-//! use aisdk_macros::tool;
+//! use aisdk::tool;
 //!
 //! #[tool]
 //! /// Adds two numbers together.

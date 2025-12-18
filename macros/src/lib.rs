@@ -19,7 +19,7 @@ use syn::{
 /// # Example
 ///
 /// ```rust,no_run
-/// use aisdk_macros::tool;
+/// use aisdk::tool;
 /// use aisdk::core::tools::Tool;
 ///
 /// #[tool]
@@ -49,7 +49,7 @@ use syn::{
 ///
 /// # Example with overrides
 /// ```rust,no_run
-/// use aisdk_macros::tool;
+/// use aisdk::tool;
 /// use aisdk::core::tools::Tool;
 ///
 ///     #[tool(
@@ -177,7 +177,6 @@ pub fn tool(_attr: TokenStream, item: TokenStream) -> TokenStream {
         #vis fn #fn_name() #return_type  {
             use schemars::{schema_for, JsonSchema, Schema};
             use std::collections::HashMap;
-            use aisdk::core::tools::ToolExecute;
 
             #[derive(JsonSchema, Debug)]
             #[allow(dead_code)]
@@ -190,11 +189,11 @@ pub fn tool(_attr: TokenStream, item: TokenStream) -> TokenStream {
             let input_schema = schema_for!(Function);
             // End
 
-            let mut tool = Tool::builder()
+            let mut tool = ::aisdk::core::tools::Tool::builder()
                 .name(#name.to_string())
                 .description(#description.to_string())
                 .input_schema(input_schema)
-                .execute(ToolExecute::new(Box::new(|inp| -> std::result::Result<String, String> {
+                .execute(::aisdk::core::tools::ToolExecute::new(Box::new(|inp| -> std::result::Result<String, String> {
                     #(#binding_tokens)*
                     #block
                 })));

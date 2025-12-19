@@ -23,6 +23,7 @@ dependencies = [
  "futures",
  "glob",
  "log",
+ "parking_lot",
  "reqwest",
  "reqwest-eventsource",
  "schemars",

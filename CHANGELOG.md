@@ -17,6 +17,7 @@ Changelog entries are grouped by type, with the following types:
 ## [Unreleased] - ReleaseDate
 
 ### Added
+- Added `Extensions` struct for attaching provider-specific metadata to core SDK structures
 - Async accessor methods to `StreamTextResponse` for thread-safe data retrieval (`messages()`, `steps()`, `usage()`, etc.)
 - Added `builder()` method for `Tool` for easier construction
 

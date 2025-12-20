@@ -108,7 +108,7 @@ impl<M: ModelName> LanguageModel for Anthropic<M> {
                     )]
                 };
                 futures::future::ready({
-                    match dbg!(evt_res) {
+                    match evt_res {
                     Ok(event) => match event {
                         AnthropicStreamEvent::MessageStart { .. } => {
                             Some(Ok(vec![LanguageModelStreamChunk::Delta(

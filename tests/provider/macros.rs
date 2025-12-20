@@ -488,7 +488,7 @@ macro_rules! generate_language_model_tool_tests {
             let response = LanguageModelRequest::builder()
                 .model($tool_model)
                 .system("You are a helpful assistant.")
-                .prompt("What is the username for user id 123?")
+                .prompt("What is the username for user id '123'?")
                 .with_tool(get_username())
                 .build()
                 .stream_text()

@@ -32,23 +32,41 @@ pub(crate) trait Client {
             .join(self.path())
             .map_err(|_| Error::InvalidInput("Failed to join base URL and path".into()))?;
 
-        let resp = client
-            .request(self.method(), url)
-            .headers(self.headers())
-            .query(&self.query_params())
-            .body(self.body())
-            .send()
-            .await
-            .map_err(|e| Error::ApiError(e.to_string()))?;
+        let max_retries = 5;
+        let mut retry_count = 0;
+        let mut wait_time = std::time::Duration::from_secs(1);
 
-        let status = resp.status();
-        let resp_text = resp.text().await.unwrap();
+        loop {
+            let resp = client
+                .request(self.method(), url.clone())
+                .headers(self.headers())
+                .query(&self.query_params())
+                .body(self.body())
+                .send()
+                .await
+                .map_err(|e| Error::ApiError(e.to_string()))?;
 
-        if !status.is_success() {
+            let status = resp.status();
+            let resp_text = resp.text().await.unwrap();
+
+            if status.is_success() {
+                return Ok(serde_json::from_str(&resp_text).unwrap());
+            }
+
+            // Check for 429 rate limit error and retry
+            if status == reqwest::StatusCode::TOO_MANY_REQUESTS && retry_count < max_retries {
+                // println!(
+                //     "Retrying request x{}, next delay {:?}",
+                //     retry_count, wait_time
+                // );
+                retry_count += 1;
+                tokio::time::sleep(wait_time).await;
+                wait_time *= 2; // Exponential backoff
+                continue;
+            }
+
             return Err(Error::ApiError(format!("HTTP {} - {}", status, resp_text)));
         }
-
-        Ok(serde_json::from_str(&resp_text).unwrap())
     }
 
     /// Parses an SSE event into a StreamEvent ( ProviderStreamEvent )
@@ -77,13 +95,45 @@ pub(crate) trait Client {
             .join(self.path())
             .map_err(|_| Error::InvalidInput("Failed to join base URL and path".into()))?;
 
-        let events_stream = client
-            .request(self.method(), url)
-            .headers(self.headers())
-            .query(&self.query_params())
-            .body(self.body())
-            .eventsource()
-            .map_err(|e| Error::ApiError(format!("SSE stream error: {}", e)))?;
+        let max_retries = 5;
+        let mut retry_count = 0;
+        let mut wait_time = std::time::Duration::from_secs(1);
+
+        let events_stream = loop {
+            // First, check the response status before establishing the event source
+            let response = client
+                .request(self.method(), url.clone())
+                .headers(self.headers())
+                .query(&self.query_params())
+                .body(self.body())
+                .send()
+                .await
+                .map_err(|e| Error::ApiError(format!("Request error: {}", e)))?;
+
+            let status = response.status();
+
+            // Check for 429 rate limit error and retry
+            if status == reqwest::StatusCode::TOO_MANY_REQUESTS && retry_count < max_retries {
+                retry_count += 1;
+                tokio::time::sleep(wait_time).await;
+                wait_time *= 2; // Exponential backoff
+                continue;
+            }
+
+            if !status.is_success() {
+                let error_text = response.text().await.unwrap_or_default();
+                return Err(Error::ApiError(format!("HTTP {} - {}", status, error_text)));
+            }
+
+            // If successful, establish the event source stream
+            break client
+                .request(self.method(), url.clone())
+                .headers(self.headers())
+                .query(&self.query_params())
+                .body(self.body())
+                .eventsource()
+                .map_err(|e| Error::ApiError(format!("SSE stream error: {}", e)))?;
+        };
 
         // Map events to deserialized StreamEvent ( ProviderStreamEvent )
         let mapped_stream = events_stream.map(|event_result| Self::parse_stream_sse(event_result));

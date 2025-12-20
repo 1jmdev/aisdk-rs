@@ -93,7 +93,7 @@ pub enum AnthropicContentBlock {
     #[serde(rename = "tool_use")]
     ToolUse {
         id: String,
-        input: String,
+        input: serde_json::Value,
         name: String,
     },
 }
@@ -144,10 +144,31 @@ pub enum AnthropicCitation {
 #[serde(tag = "role")]
 pub enum AnthropicMessageParam {
     #[serde(rename = "user")]
-    User { content: String },
+    User {
+        content: AnthropicUserMessageContent,
+    },
     #[serde(rename = "assistant")]
     Assistant {
-        content: AnthropicAssistantMessageParamContent,
+        content: Vec<AnthropicAssistantMessageParamContent>,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum AnthropicUserMessageContent {
+    Text(String),
+    Blocks(Vec<AnthropicUserMessageContentBlock>),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum AnthropicUserMessageContentBlock {
+    #[serde(rename = "text")]
+    Text { text: String },
+    #[serde(rename = "tool_result")]
+    ToolResult {
+        tool_use_id: String,
+        content: String,
     },
 }
 
@@ -161,7 +182,7 @@ pub enum AnthropicAssistantMessageParamContent {
     #[serde(rename = "tool_use")]
     ToolUse {
         id: String,
-        input: String,
+        input: serde_json::Value,
         name: String,
     },
 }
@@ -170,7 +191,7 @@ pub enum AnthropicAssistantMessageParamContent {
 pub struct AnthropicTool {
     pub name: String,
     pub description: String,
-    pub input_schema: String,
+    pub input_schema: serde_json::Value,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]

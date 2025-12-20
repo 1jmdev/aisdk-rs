@@ -56,7 +56,7 @@ impl<M: ModelName> LanguageModel for Anthropic<M> {
                 }
                 AnthropicContentBlock::ToolUse { id, input, name } => {
                     collected.push(LanguageModelResponseContentType::ToolCall(ToolCallInfo {
-                        input: serde_json::from_str(&input).unwrap_or_default(),
+                        input: input,
                         tool: ToolDetails {
                             id: id.to_string(),
                             name: name.to_string(),

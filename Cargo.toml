@@ -21,6 +21,7 @@ anthropic = []
 groq = ["openai"]
 prompt = ["tera", "glob"]
 test-access = []
+axum = ["dep:axum"]
 
 [dependencies]
 tera = { version = "1", optional = true }
@@ -36,6 +37,8 @@ futures = "0.3"
 tokio = { version = "1.0", features = ["rt-multi-thread", "macros"] }
 reqwest = { version = "0.12", features = ["json", "stream"] }
 reqwest-eventsource = "0.6.0"
+uuid = { version = "1.0", features = ["v4"] }
+axum = { version = ">=0.7, <0.9", optional = true }
 
 [dev-dependencies]
 cargo-husky = { version = "1", features = ["precommit-hook", "run-cargo-test", "run-cargo-clippy", "run-cargo-fmt"] }

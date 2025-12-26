@@ -84,7 +84,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let result = LanguageModelRequest::builder()
         .model(OpenAI::gpt_4o())
-        .system("You are a helpful assistant with access to tools.")
+        .system("You are a helpful assistant.")
         .prompt("What is the weather in New York?")
         .with_tool(get_weather())
         .stop_when(step_count_is(3)) // Limit agent loop to 3 steps

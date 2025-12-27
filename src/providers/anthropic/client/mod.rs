@@ -1,6 +1,7 @@
+/// Type definitions for Anthropic API.
 pub mod types;
 
-pub use types::*;
+pub(crate) use types::*;
 
 use crate::{Error, core::capabilities::ModelName};
 use derive_builder::Builder;
@@ -15,12 +16,12 @@ use crate::{
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, Builder)]
 #[builder(setter(into), build_fn(error = "Error"))]
-pub struct AnthropicOptions {
-    pub model: String,
+pub(crate) struct AnthropicOptions {
+    pub(crate) model: String,
     #[builder(default)]
-    pub messages: Vec<AnthropicMessageParam>,
+    pub(crate) messages: Vec<AnthropicMessageParam>,
     #[builder(default = "4096")]
-    pub max_tokens: u32,
+    pub(crate) max_tokens: u32,
     #[builder(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stop_sequences: Option<Vec<String>>,
@@ -48,7 +49,7 @@ pub struct AnthropicOptions {
 }
 
 impl AnthropicOptions {
-    pub fn builder() -> AnthropicOptionsBuilder {
+    pub(crate) fn builder() -> AnthropicOptionsBuilder {
         AnthropicOptionsBuilder::default()
     }
 }

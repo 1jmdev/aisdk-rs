@@ -54,7 +54,7 @@ macro_rules! generate_language_model_tests {
             language_model::{LanguageModelResponseContentType, StopReason},
             tools::Tool,
         };
-        use aisdk_macros::tool;
+        use aisdk::macros::tool;
         use dotenv::dotenv;
         use std::sync::{Arc, Mutex};
 

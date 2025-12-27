@@ -156,19 +156,30 @@ pub(crate) enum AnthropicMessageParam {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
+/// See more [here](https://platform.claude.com/docs/en/api/messages#message_param)
 pub enum AnthropicUserMessageContent {
+    /// Regular text content
     Text(String),
+    /// List of content blocks
     Blocks(Vec<AnthropicUserMessageContentBlock>),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
+/// See more [here](https://platform.claude.com/docs/en/api/messages#content_block_param)
 pub enum AnthropicUserMessageContentBlock {
     #[serde(rename = "text")]
-    Text { text: String },
+    /// Regular text content
+    Text {
+        /// The text content
+        text: String,
+    },
     #[serde(rename = "tool_result")]
+    /// Tool result content
     ToolResult {
+        /// The ID of the tool used
         tool_use_id: String,
+        /// The content of the tool result
         content: String,
     },
 }

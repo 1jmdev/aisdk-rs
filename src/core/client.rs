@@ -44,13 +44,16 @@ pub(crate) trait Client {
                 .body(self.body())
                 .send()
                 .await
-                .map_err(|e| Error::ApiError(e.to_string()))?;
+                .map_err(|e| Error::ApiError {
+                    status_code: e.status(),
+                    details: e.to_string(),
+                })?;
 
             let status = resp.status();
-            let resp_text = resp
-                .text()
-                .await
-                .map_err(|e| Error::ApiError(format!("Failed to read response: {}", e)))?;
+            let resp_text = resp.text().await.map_err(|e| Error::ApiError {
+                status_code: e.status(),
+                details: format!("Failed to read response: {}", e),
+            })?;
 
             if status.is_success() {
                 return Ok(serde_json::from_str(&resp_text).unwrap());
@@ -64,7 +67,10 @@ pub(crate) trait Client {
                 continue;
             }
 
-            return Err(Error::ApiError(format!("HTTP {} - {}", status, resp_text)));
+            return Err(Error::ApiError {
+                status_code: Some(status),
+                details: resp_text,
+            });
         }
     }
 
@@ -107,7 +113,10 @@ pub(crate) trait Client {
                 .body(self.body())
                 .send()
                 .await
-                .map_err(|e| Error::ApiError(format!("Request error: {}", e)))?;
+                .map_err(|e| Error::ApiError {
+                    status_code: e.status(),
+                    details: format!("Request error: {}", e),
+                })?;
 
             let status = response.status();
 
@@ -121,7 +130,10 @@ pub(crate) trait Client {
 
             if !status.is_success() {
                 let error_text = response.text().await.unwrap_or_default();
-                return Err(Error::ApiError(format!("HTTP {} - {}", status, error_text)));
+                return Err(Error::ApiError {
+                    status_code: Some(status),
+                    details: error_text,
+                });
             }
 
             // If successful, establish the event source stream
@@ -131,7 +143,10 @@ pub(crate) trait Client {
                 .query(&self.query_params())
                 .body(self.body())
                 .eventsource()
-                .map_err(|e| Error::ApiError(format!("SSE stream error: {}", e)))?;
+                .map_err(|e| Error::ApiError {
+                    status_code: None,
+                    details: format!("SSE stream error: {}", e),
+                })?;
         };
 
         // Map events to deserialized StreamEvent ( ProviderStreamEvent )

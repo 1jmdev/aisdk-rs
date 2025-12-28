@@ -67,7 +67,7 @@ impl<M: ModelName> LanguageModel for Anthropic<M> {
                 }
                 AnthropicContentBlock::ToolUse { id, input, name } => {
                     collected.push(LanguageModelResponseContentType::ToolCall(ToolCallInfo {
-                        input: input,
+                        input,
                         tool: ToolDetails {
                             id: id.to_string(),
                             name: name.to_string(),

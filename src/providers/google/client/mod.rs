@@ -71,8 +71,11 @@ impl<M: ModelName> Client for Google<M> {
             Ok(event) => match event {
                 Event::Open => Ok(types::GoogleStreamEvent::NotSupported("{}".to_string())),
                 Event::Message(msg) => {
-                    let value: serde_json::Value = serde_json::from_str(&msg.data)
-                        .map_err(|e| Error::ApiError(format!("Invalid JSON in SSE data: {}", e)))?;
+                    let value: serde_json::Value =
+                        serde_json::from_str(&msg.data).map_err(|e| Error::ApiError {
+                            status_code: None,
+                            details: format!("Invalid JSON in SSE data: {}", e),
+                        })?;
 
                     Ok(
                         serde_json::from_value::<types::GenerateContentResponse>(value)
@@ -81,7 +84,17 @@ impl<M: ModelName> Client for Google<M> {
                     )
                 }
             },
-            Err(e) => Err(Error::ApiError(e.to_string())),
+            Err(e) => {
+                // Extract status code if it's an InvalidStatusCode error
+                let status_code = match &e {
+                    reqwest_eventsource::Error::InvalidStatusCode(status, _) => Some(*status),
+                    _ => None,
+                };
+                Err(Error::ApiError {
+                    status_code,
+                    details: e.to_string(),
+                })
+            }
         }
     }
 

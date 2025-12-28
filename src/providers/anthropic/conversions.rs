@@ -19,7 +19,7 @@ impl From<LanguageModelOptions> for AnthropicOptions {
         let max_tokens = options.max_output_tokens.unwrap_or(10_000);
 
         if let Some(system) = options.system
-            && system.len() > 0
+            && !system.is_empty()
         {
             request.system(Some(system));
         } else {
@@ -30,7 +30,7 @@ impl From<LanguageModelOptions> for AnthropicOptions {
         for msg in options.messages {
             match msg.message {
                 Message::System(s) => {
-                    if s.content.len() > 0 {
+                    if !s.content.is_empty() {
                         request.system(Some(s.content));
                     }
                 }

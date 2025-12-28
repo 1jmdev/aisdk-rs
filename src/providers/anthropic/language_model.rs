@@ -140,12 +140,12 @@ impl<M: ModelName> LanguageModel for Anthropic<M> {
                                     .insert(index, AccumulatedBlock::Text(String::new()));
                                 Some(Ok(unsupported("ContentBlockStart::Text")))
                             }
-                            AnthropicContentBlock::Thinking { signature, .. } => {
+                            AnthropicContentBlock::Thinking { .. } => {
                                 state
                                     .content_blocks
                                     .insert(index, AccumulatedBlock::Thinking {
                                         thinking: String::new(),
-                                        signature: Some(signature),
+                                        signature: None,
                                     });
                                 Some(Ok(unsupported("ContentBlockStart::Thinking")))
                             }
@@ -193,15 +193,8 @@ impl<M: ModelName> LanguageModel for Anthropic<M> {
                                         AccumulatedBlock::Thinking { signature, .. },
                                         AnthropicDelta::SignatureDelta { signature: delta_signature },
                                     ) => {
-                                        // Accumulate signature if needed
-                                        if let Some(sig) = signature {
-                                            sig.push_str(&delta_signature);
-                                        } else {
-                                            *signature = Some(delta_signature.clone());
-                                        }
-                                        Some(Ok(vec![LanguageModelStreamChunk::Delta(
-                                            LanguageModelStreamChunkType::NotSupported("SignatureDelta".to_string()),
-                                        )]))
+                                        *signature = Some(delta_signature.clone());
+                                        Some(Ok(unsupported("SignatureDelta")))
                                     }
                                     (
                                         AccumulatedBlock::ToolUse {

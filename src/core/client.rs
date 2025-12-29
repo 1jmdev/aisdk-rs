@@ -56,7 +56,10 @@ pub(crate) trait Client {
             })?;
 
             if status.is_success() {
-                return Ok(serde_json::from_str(&resp_text).unwrap());
+                return serde_json::from_str(&resp_text).map_err(|e| Error::ApiError {
+                    status_code: Some(status),
+                    details: format!("Failed to parse response: {}", e),
+                });
             }
 
             // Check for 429 rate limit error and retry

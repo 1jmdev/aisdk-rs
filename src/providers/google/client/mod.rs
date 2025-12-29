@@ -33,9 +33,12 @@ impl<M: ModelName> Client for Google<M> {
 
     fn path(&self) -> String {
         if self.options.streaming {
-            return format!("models/{}:streamGenerateContent", self.options.model);
+            return format!(
+                "/v1beta/models/{}:streamGenerateContent",
+                self.options.model
+            );
         };
-        format!("models/{}:generateContent", self.options.model)
+        format!("/v1beta/models/{}:generateContent", self.options.model)
     }
 
     fn method(&self) -> reqwest::Method {

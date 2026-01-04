@@ -80,6 +80,12 @@ def load_provider_models(root: Path, provider_name: str) -> Dict[str, dict]:
         try:
             with open(toml_file, 'rb') as f:
                 config = tomllib.load(f)
+
+                # Skip deprecated models
+                if config.get('status') == 'deprecated':
+                    log(f"Skipping deprecated model: {toml_file.name}")
+                    continue
+
                 config['filename'] = toml_file.stem
                 config['folder_prefix'] = folder_prefix
 
@@ -90,7 +96,7 @@ def load_provider_models(root: Path, provider_name: str) -> Dict[str, dict]:
                     model_key = to_pascal_case(toml_file.stem)
 
                 models[model_key] = config
-                log(f"Loaded model: {model_key} from {relative_path}")
+                log(f"Loaded active model: {model_key} from {relative_path}")
         except Exception as e:
             log(f"Warning: Failed to load {toml_file}: {e}")
 

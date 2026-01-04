@@ -51,7 +51,7 @@ def ensure_models_dev(root: Path):
         sys.exit(1)
 
 def load_provider_models(root: Path, provider_name: str) -> Dict[str, dict]:
-    """Load all TOML model configs for a provider."""
+    """Load all TOML model configs for a provider, including nested folders."""
     provider_path = root / 'models.dev' / 'providers' / provider_name / 'models'
 
     if not provider_path.exists():
@@ -59,14 +59,38 @@ def load_provider_models(root: Path, provider_name: str) -> Dict[str, dict]:
         return {}
 
     models = {}
-    for toml_file in provider_path.glob('*.toml'):
+    for toml_file in provider_path.rglob('*.toml'):
+        # Determine if file is in a subdirectory
+        relative_path = toml_file.relative_to(provider_path)
+        folder_prefix = None
+
+        # Validate nesting depth (only allow 1 level: models/*.toml or models/folder/*.toml)
+        if len(relative_path.parts) > 2:
+            log(f"Error: Nested folder depth exceeds 1 level at '{relative_path}'.")
+            log(f"Only 'models/*.toml' and 'models/folder/*.toml' are supported.")
+            raise ValueError(
+                f"Nested folder depth exceeds 1 level at '{relative_path}'. "
+                f"Only 'models/*.toml' and 'models/folder/*.toml' are supported."
+            )
+
+        if len(relative_path.parts) == 2:
+            # File is in a subdirectory (e.g., meta-llama/llama-guard-4-12b.toml)
+            folder_prefix = relative_path.parts[0]
+
         try:
             with open(toml_file, 'rb') as f:
                 config = tomllib.load(f)
                 config['filename'] = toml_file.stem
-                model_key = to_pascal_case(toml_file.stem)
+                config['folder_prefix'] = folder_prefix
+
+                # Generate model_key with folder prefix
+                if folder_prefix:
+                    model_key = to_pascal_case(folder_prefix) + to_pascal_case(toml_file.stem)
+                else:
+                    model_key = to_pascal_case(toml_file.stem)
+
                 models[model_key] = config
-                log(f"Loaded model: {model_key} from {toml_file.name}")
+                log(f"Loaded model: {model_key} from {relative_path}")
         except Exception as e:
             log(f"Warning: Failed to load {toml_file}: {e}")
 
@@ -137,13 +161,20 @@ def get_capabilities(toml_data: dict) -> List[str]:
     return sorted(list(set(capabilities)))
 
 def get_model_name(toml_data: dict, filename: str) -> str:
-    """Get the model name constant."""
+    """Get the model name constant with folder prefix if applicable."""
     # Try explicit model_name field first (if it exists in schema)
     if 'model_name' in toml_data:
         return toml_data['model_name']
 
-    # Fallback to stored filename or derive from filename param
-    return toml_data.get('filename', filename.replace('.toml', ''))
+    # Get base name from filename
+    base_name = toml_data.get('filename', filename.replace('.toml', ''))
+
+    # Add folder prefix if it exists
+    folder_prefix = toml_data.get('folder_prefix')
+    if folder_prefix:
+        return f"{folder_prefix}/{base_name}"
+
+    return base_name
 
 def generate_capabilities_rs(provider_input: str, models: Dict[str, dict]) -> str:
     """Generate the complete capabilities.rs content."""
@@ -169,8 +200,17 @@ def generate_capabilities_rs(provider_input: str, models: Dict[str, dict]) -> st
     for _, config in sorted(models.items()):
         capabilities = get_capabilities(config)
         model_name = get_model_name(config, "")
-        constructor_name = to_constructor_name(model_name)
-        model_key = to_pascal_case(constructor_name)
+        base_name = config['filename']
+        folder_prefix = config.get('folder_prefix')
+
+        # Create constructor name with folder prefix if applicable
+        if folder_prefix:
+            constructor_name = to_constructor_name(folder_prefix) + '_' + to_constructor_name(base_name)
+            model_key = to_pascal_case(folder_prefix) + to_pascal_case(base_name)
+        else:
+            constructor_name = to_constructor_name(base_name)
+            model_key = to_pascal_case(base_name)
+
         display_name = config['name']
 
         lines.extend([
@@ -179,7 +219,7 @@ def generate_capabilities_rs(provider_input: str, models: Dict[str, dict]) -> st
             f'            constructor_name: {constructor_name},',
             f'            display_name: "{display_name}",',
             f'            capabilities: [{", ".join(capabilities)}]',
-            '        },'
+            '        },',
         ])
 
     lines.extend([

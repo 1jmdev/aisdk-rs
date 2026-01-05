@@ -323,4 +323,5 @@ pub(crate) enum ChatCompletionsStreamEvent {
     Chunk(ChatCompletionsStreamChunk),
     Done,
     Error(String),
+    Open,
 }

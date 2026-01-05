@@ -48,7 +48,7 @@ impl<M: ModelName> Client for OpenAIChatCompletions<M> {
     ) -> crate::error::Result<Self::StreamEvent> {
         match event {
             Ok(event) => match event {
-                Event::Open => Ok(ChatCompletionsStreamEvent::Done),
+                Event::Open => Ok(ChatCompletionsStreamEvent::Open),
                 Event::Message(msg) => {
                     if msg.data.trim() == "[DONE]" || msg.data.is_empty() {
                         return Ok(ChatCompletionsStreamEvent::Done);

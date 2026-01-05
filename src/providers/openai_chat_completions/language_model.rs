@@ -72,8 +72,12 @@ impl<M: ModelName> LanguageModel for OpenAIChatCompletions<M> {
 
         let stream = self.send_and_stream(&self.settings.base_url).await?;
 
+        // State for accumulating tool calls across chunks
+        use std::collections::HashMap;
+        let mut accumulated_tool_calls: HashMap<u32, (String, String, String)> = HashMap::new();
+
         // Map stream events to SDK stream chunks
-        let stream = stream.map(|evt_res| match evt_res {
+        let stream = stream.map(move |evt_res| match evt_res {
             Ok(types::ChatCompletionsStreamEvent::Chunk(chunk)) => {
                 let mut results = Vec::new();
 
@@ -87,22 +91,35 @@ impl<M: ModelName> LanguageModel for OpenAIChatCompletions<M> {
                         ));
                     }
 
-                    // Tool call delta
+                    // Accumulate tool call deltas
                     if let Some(tool_calls) = choice.delta.tool_calls {
                         for tool_call in tool_calls {
-                            if let Some(args) = tool_call
-                                .function
-                                .as_ref()
-                                .and_then(|f| f.arguments.as_ref())
-                            {
-                                results.push(LanguageModelStreamChunk::Delta(
-                                    LanguageModelStreamChunkType::ToolCall(args.clone()),
-                                ));
+                            let entry = accumulated_tool_calls.entry(tool_call.index).or_insert((
+                                String::new(),
+                                String::new(),
+                                String::new(),
+                            ));
+
+                            // Accumulate ID
+                            if let Some(id) = tool_call.id {
+                                entry.0 = id;
+                            }
+
+                            // Accumulate name and arguments
+                            if let Some(function) = tool_call.function {
+                                if let Some(name) = function.name {
+                                    entry.1 = name;
+                                }
+                                if let Some(args) = function.arguments {
+                                    entry.2.push_str(&args);
+                                    results.push(LanguageModelStreamChunk::Delta(
+                                        LanguageModelStreamChunkType::ToolCall(args),
+                                    ));
+                                }
                             }
                         }
                     }
 
-                    // Handle finish
                     if let Some(finish_reason) = choice.finish_reason {
                         let usage = chunk.usage.clone().map(|u| u.into());
 
@@ -113,27 +130,48 @@ impl<M: ModelName> LanguageModel for OpenAIChatCompletions<M> {
                                     usage,
                                 }));
                             }
-                            "tool_calls" => {
-                                // Tool calls are completed - signal done
+                            "tool_calls" | "function_call" => {
+                                // Send accumulated tool calls
+                                for (_index, (id, name, args)) in accumulated_tool_calls.drain() {
+                                    let mut tool_info = ToolCallInfo::new(name);
+                                    tool_info.id(id);
+                                    tool_info
+                                        .input(serde_json::from_str(&args).unwrap_or_default());
+                                    results.push(LanguageModelStreamChunk::Done(
+                                        AssistantMessage {
+                                            content: LanguageModelResponseContentType::ToolCall(
+                                                tool_info,
+                                            ),
+                                            usage: usage.clone(),
+                                        },
+                                    ));
+                                }
+                            }
+                            "content_filter" => {
                                 results.push(LanguageModelStreamChunk::Done(AssistantMessage {
                                     content: LanguageModelResponseContentType::Text(String::new()),
                                     usage,
                                 }));
-                            }
-                            "content_filter" => {
                                 results.push(LanguageModelStreamChunk::Delta(
                                     LanguageModelStreamChunkType::Failed(
                                         "Content filtered".to_string(),
                                     ),
                                 ));
                             }
-                            _ => {}
+                            // For any unknown finish reason, treat as normal completion
+                            _ => {
+                                results.push(LanguageModelStreamChunk::Done(AssistantMessage {
+                                    content: LanguageModelResponseContentType::Text(String::new()),
+                                    usage,
+                                }));
+                            }
                         }
                     }
                 }
 
                 Ok(results)
             }
+            Ok(types::ChatCompletionsStreamEvent::Open) => Ok(vec![]),
             Ok(types::ChatCompletionsStreamEvent::Done) => Ok(vec![]),
             Ok(types::ChatCompletionsStreamEvent::Error(e)) => {
                 Ok(vec![LanguageModelStreamChunk::Delta(

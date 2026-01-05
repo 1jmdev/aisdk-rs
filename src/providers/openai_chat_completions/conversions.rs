@@ -13,11 +13,24 @@ use crate::providers::openai_chat_completions::client::{self, types};
 
 impl From<LanguageModelOptions> for client::ChatCompletionsOptions {
     fn from(options: LanguageModelOptions) -> Self {
-        let messages: Vec<types::ChatMessage> = options
-            .messages
-            .into_iter()
-            .map(|tagged| tagged.message.into())
-            .collect();
+        let mut messages: Vec<types::ChatMessage> = Vec::new();
+
+        if let Some(system_prompt) = options.system {
+            messages.push(types::ChatMessage {
+                role: types::Role::System,
+                content: Some(system_prompt),
+                name: None,
+                tool_calls: None,
+                tool_call_id: None,
+            });
+        }
+
+        messages.extend(
+            options
+                .messages
+                .into_iter()
+                .map(|tagged| tagged.message.into()),
+        );
 
         let tools: Option<Vec<types::Tool>> = options.tools.map(|tool_list| {
             tool_list
@@ -120,7 +133,7 @@ impl From<Message> for types::ChatMessage {
                 },
                 LanguageModelResponseContentType::ToolCall(tool_info) => types::ChatMessage {
                     role: types::Role::Assistant,
-                    content: None,
+                    content: Some("".to_string()),
                     name: None,
                     tool_calls: Some(vec![types::ToolCall {
                         id: tool_info.tool.id.clone(),
@@ -182,7 +195,14 @@ impl From<SdkTool> for types::Tool {
     fn from(tool: SdkTool) -> Self {
         let mut params = tool.input_schema.to_value();
 
-        // Ensure required fields for OpenAI
+        // Remove schema metadata fields that may conflict with strict mode
+        if let serde_json::Value::Object(ref mut obj) = params {
+            obj.remove("$schema");
+            obj.remove("title");
+        }
+
+        // Ensure required fields for OpenAI Chat Completions
+        params["type"] = serde_json::Value::String("object".to_string());
         params["additionalProperties"] = serde_json::Value::Bool(false);
 
         if !params

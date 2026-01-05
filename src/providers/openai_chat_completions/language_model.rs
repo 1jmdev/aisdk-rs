@@ -47,7 +47,8 @@ impl<M: ModelName> LanguageModel for OpenAIChatCompletions<M> {
                     let mut tool_info = ToolCallInfo::new(tool_call.function.name);
                     tool_info.id(tool_call.id);
                     tool_info.input(
-                        serde_json::from_str(&tool_call.function.arguments).unwrap_or_default(),
+                        serde_json::from_str(&tool_call.function.arguments)
+                            .unwrap_or_else(|_| serde_json::Value::Object(serde_json::Map::new())),
                     );
                     contents.push(LanguageModelResponseContentType::ToolCall(tool_info));
                 }
@@ -132,11 +133,12 @@ impl<M: ModelName> LanguageModel for OpenAIChatCompletions<M> {
                             }
                             "tool_calls" | "function_call" => {
                                 // Send accumulated tool calls
-                                for (_index, (id, name, args)) in accumulated_tool_calls.drain() {
-                                    let mut tool_info = ToolCallInfo::new(name);
-                                    tool_info.id(id);
-                                    tool_info
-                                        .input(serde_json::from_str(&args).unwrap_or_default());
+                                for (id, name, args) in accumulated_tool_calls.values() {
+                                    let mut tool_info = ToolCallInfo::new(name.clone());
+                                    tool_info.id(id.clone());
+                                    tool_info.input(serde_json::from_str(args).unwrap_or_else(
+                                        |_| serde_json::Value::Object(serde_json::Map::new()),
+                                    ));
                                     results.push(LanguageModelStreamChunk::Done(
                                         AssistantMessage {
                                             content: LanguageModelResponseContentType::ToolCall(

@@ -12,3 +12,7 @@ pub mod groq;
 
 #[cfg(feature = "google")]
 pub mod google;
+
+// Internal module for OpenAI Chat Completions API compatible providers
+#[cfg(feature = "openaichatcompletions")]
+pub(crate) mod openai_chat_completions;

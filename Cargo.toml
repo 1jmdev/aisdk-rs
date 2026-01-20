@@ -15,12 +15,13 @@ keywords = ["ai", "sdk", "aisdk", "ai-sdk-rs", "openai"]
 categories = ["api-bindings", "asynchronous"]
 
 [features]
-full = ["prompt", "openai", "openaichatcompletions", "anthropic", "groq", "vercel", "google"]
+full = ["prompt", "openai", "openaichatcompletions", "anthropic", "groq", "vercel", "google", "openrouter"]
 openai = []
 openaichatcompletions = []
 anthropic = []
 groq = ["openaichatcompletions"]
 vercel = ["openaichatcompletions"]
+openrouter = ["openaichatcompletions"]
 google = []
 prompt = ["tera", "glob"]
 test-access = []
@@ -84,3 +85,8 @@ required-features = ["google", "test-access"]
 name = "vercel_tests"
 path = "tests/provider/vercel_tests.rs"
 required-features = ["vercel", "test-access"]
+
+[[test]]
+name = "openrouter_tests"
+path = "tests/provider/openrouter_tests.rs"
+required-features = ["openrouter", "test-access"]

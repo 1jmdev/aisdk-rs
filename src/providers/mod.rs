@@ -26,6 +26,11 @@ pub mod vercel;
 #[cfg(feature = "vercel")]
 pub use vercel::Vercel;
 
+#[cfg(feature = "openrouter")]
+pub mod openrouter;
+#[cfg(feature = "openrouter")]
+pub use openrouter::OpenRouter;
+
 // Internal module for OpenAI Chat Completions API compatible providers
 #[cfg(feature = "openaichatcompletions")]
 pub(crate) mod openai_chat_completions;

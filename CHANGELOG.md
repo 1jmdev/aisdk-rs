@@ -22,6 +22,7 @@ Changelog entries are grouped by type, with the following types:
 - Added `DeepSeek` provider
 - Added `Amazon Bedrock` provider
 - Added `TogetherAI` provider
+- Added `XAI` provider
 
 ### Changed
 - Changed Groq provider to use OpenAI's ChatCompletions API

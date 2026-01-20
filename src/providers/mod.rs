@@ -46,6 +46,11 @@ pub mod togetherai;
 #[cfg(feature = "togetherai")]
 pub use togetherai::TogetherAI;
 
+#[cfg(feature = "xai")]
+pub mod xai;
+#[cfg(feature = "xai")]
+pub use xai::XAI;
+
 // Internal module for OpenAI Chat Completions API compatible providers
 #[cfg(feature = "openaichatcompletions")]
 pub(crate) mod openai_chat_completions;

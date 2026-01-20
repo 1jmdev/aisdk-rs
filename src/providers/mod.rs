@@ -36,6 +36,11 @@ pub mod deepseek;
 #[cfg(feature = "deepseek")]
 pub use deepseek::DeepSeek;
 
+#[cfg(feature = "amazon-bedrock")]
+pub mod amazon_bedrock;
+#[cfg(feature = "amazon-bedrock")]
+pub use amazon_bedrock::AmazonBedrock;
+
 // Internal module for OpenAI Chat Completions API compatible providers
 #[cfg(feature = "openaichatcompletions")]
 pub(crate) mod openai_chat_completions;

@@ -3,18 +3,28 @@
 
 #[cfg(feature = "openai")]
 pub mod openai;
+#[cfg(feature = "openai")]
+pub use openai::OpenAI;
 
 #[cfg(feature = "anthropic")]
 pub mod anthropic;
+#[cfg(feature = "anthropic")]
+pub use anthropic::Anthropic;
 
 #[cfg(feature = "groq")]
 pub mod groq;
+#[cfg(feature = "groq")]
+pub use groq::Groq;
 
 #[cfg(feature = "google")]
 pub mod google;
+#[cfg(feature = "google")]
+pub use google::Google;
 
 #[cfg(feature = "vercel")]
 pub mod vercel;
+#[cfg(feature = "vercel")]
+pub use vercel::Vercel;
 
 // Internal module for OpenAI Chat Completions API compatible providers
 #[cfg(feature = "openaichatcompletions")]

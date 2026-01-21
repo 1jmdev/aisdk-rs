@@ -9,6 +9,7 @@
 
 pub mod capabilities;
 pub mod client;
+pub mod embedding_model;
 pub mod language_model;
 pub mod messages;
 pub mod provider;

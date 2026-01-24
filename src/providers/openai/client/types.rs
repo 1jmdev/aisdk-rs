@@ -96,6 +96,12 @@ pub(crate) struct ResponseUsage {
     pub total_tokens: u32,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub(crate) struct EmbeddingUsage {
+    pub total_tokens: u32,
+    pub prompt_tokens: u32,
+}
+
 #[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)]
 pub(crate) struct InputTokenDetails {
     pub cached_tokens: u32,
@@ -377,10 +383,18 @@ pub(crate) struct TopLogProbs {
 
 /// See [OpenAI Embedding API](https://platform.openai.com/docs/api-reference/embeddings/object)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct Embedding {
+pub(crate) struct Embedding {
     pub embedding: Vec<f32>,
     pub index: usize,
     pub object: String, // always "embedding"
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub(crate) struct EmbeddingResponse {
+    pub object: Option<String>, // always "list"
+    pub data: Vec<Embedding>,
+    pub model: Option<String>,
+    pub usage: Option<EmbeddingUsage>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

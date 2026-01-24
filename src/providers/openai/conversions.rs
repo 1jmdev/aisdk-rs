@@ -1,5 +1,6 @@
 //! Helper functions and conversions for the OpenAI provider.
 
+use crate::core::embedding_model::EmbeddingModelOptions;
 use crate::core::language_model::{
     LanguageModelOptions, LanguageModelResponseContentType, ReasoningEffort, Usage,
 };
@@ -173,6 +174,18 @@ impl From<ReasoningEffort> for types::ReasoningEffort {
             ReasoningEffort::Low => client::ReasoningEffort::Minimal,
             ReasoningEffort::Medium => client::ReasoningEffort::Medium,
             ReasoningEffort::High => client::ReasoningEffort::High,
+        }
+    }
+}
+
+impl From<EmbeddingModelOptions> for types::EmbeddingOptions {
+    fn from(value: EmbeddingModelOptions) -> Self {
+        Self {
+            input: value,
+            model: "".to_string(), // will be set in mod.rs
+            user: None,
+            dimensions: None, // TODO: add dimensions options to core options
+            encoding_format: None,
         }
     }
 }

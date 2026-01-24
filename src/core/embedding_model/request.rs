@@ -1,4 +1,4 @@
-use crate::core::embedding_model::{EmbeddingModel, EmbeddingModelResponse};
+use crate::core::embedding_model::{EmbeddingModel, EmbeddingModelOptions, EmbeddingModelResponse};
 use derive_builder::Builder;
 
 /// OpenAI Embeddings
@@ -8,7 +8,7 @@ pub struct EmbeddingModelRequest<M: EmbeddingModel> {
     /// Specific OpenAI model to use
     pub model: M,
     /// The input text to generate embeddings for
-    pub input: Vec<String>,
+    pub input: EmbeddingModelOptions,
 }
 
 #[allow(dead_code)]
@@ -18,7 +18,7 @@ impl<M: EmbeddingModel> EmbeddingModelRequest<M> {
         EmbeddingModelRequestBuilder::default()
     }
 
-    pub fn embed(&self) -> EmbeddingModelResponse {
-        todo!()
+    pub async fn embed(&self) -> EmbeddingModelResponse {
+        self.model.embed().await
     }
 }

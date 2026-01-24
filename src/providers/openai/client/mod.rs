@@ -129,7 +129,7 @@ impl<M: ModelName> LanguageModelClient for OpenAI<M> {
 }
 
 impl<M: ModelName> EmbeddingClient for OpenAI<M> {
-    type Response = types::Embedding;
+    type Response = types::EmbeddingResponse;
 
     fn path(&self) -> String {
         "/v1/embeddings".to_string()

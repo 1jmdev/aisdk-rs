@@ -4,6 +4,7 @@
 pub mod capabilities;
 pub mod client;
 pub mod conversions;
+pub mod embedding_model;
 pub mod extensions;
 pub mod language_model;
 pub mod settings;
@@ -11,7 +12,7 @@ pub mod settings;
 use crate::core::capabilities::ModelName;
 use crate::core::utils::validate_base_url;
 use crate::error::Error;
-use crate::providers::google::client::GoogleOptions;
+use crate::providers::google::client::{GoogleEmbeddingOptions, GoogleOptions};
 use crate::providers::google::settings::GoogleProviderSettings;
 use serde::Serialize;
 
@@ -21,6 +22,7 @@ pub struct Google<M: ModelName> {
     /// Configuration settings for the Google provider.
     pub settings: GoogleProviderSettings,
     options: GoogleOptions,
+    pub(crate) embedding_options: GoogleEmbeddingOptions,
     _phantom: std::marker::PhantomData<M>,
 }
 
@@ -39,10 +41,15 @@ impl<M: ModelName> Default for Google<M> {
             .model(M::MODEL_NAME.to_string())
             .build()
             .unwrap();
+        let embedding_options = GoogleEmbeddingOptions {
+            model: M::MODEL_NAME.to_string(),
+            requests: Vec::new(),
+        };
 
         Self {
             settings,
             options,
+            embedding_options,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -99,6 +106,10 @@ impl<M: ModelName> GoogleBuilder<M> {
             .model(M::MODEL_NAME.to_string())
             .build()
             .unwrap();
+        let embedding_options = GoogleEmbeddingOptions {
+            model: M::MODEL_NAME.to_string(),
+            requests: Vec::new(),
+        };
 
         Ok(Google {
             settings: GoogleProviderSettings {
@@ -106,6 +117,7 @@ impl<M: ModelName> GoogleBuilder<M> {
                 ..self.settings
             },
             options,
+            embedding_options,
             _phantom: std::marker::PhantomData,
         })
     }

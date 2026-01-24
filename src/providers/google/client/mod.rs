@@ -1,5 +1,5 @@
 //! Client implementation for the Google provider.
-use crate::core::client::LanguageModelClient;
+use crate::core::client::{EmbeddingClient, LanguageModelClient};
 use crate::error::{Error, Result};
 use crate::providers::google::{Google, ModelName};
 use derive_builder::Builder;
@@ -25,6 +25,13 @@ impl GoogleOptions {
     pub(crate) fn builder() -> GoogleOptionsBuilder {
         GoogleOptionsBuilder::default()
     }
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct GoogleEmbeddingOptions {
+    pub(crate) model: String,
+    pub(crate) requests: Vec<types::EmbedContentRequest>,
 }
 
 impl<M: ModelName> LanguageModelClient for Google<M> {
@@ -108,5 +115,39 @@ impl<M: ModelName> LanguageModelClient for Google<M> {
             }
             _ => false,
         }
+    }
+}
+
+impl<M: ModelName> EmbeddingClient for Google<M> {
+    type Response = types::BatchEmbedContentsResponse;
+
+    fn path(&self) -> String {
+        format!(
+            "/v1/models/{}:batchEmbedContents",
+            self.embedding_options.model
+        )
+    }
+
+    fn method(&self) -> reqwest::Method {
+        reqwest::Method::POST
+    }
+
+    fn headers(&self) -> reqwest::header::HeaderMap {
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse().unwrap());
+        headers.insert("x-goog-api-key", self.settings.api_key.parse().unwrap());
+        headers
+    }
+
+    fn query_params(&self) -> Vec<(&str, &str)> {
+        Vec::new()
+    }
+
+    fn body(&self) -> reqwest::Body {
+        let request = types::BatchEmbedContentsRequest {
+            requests: self.embedding_options.requests.clone(),
+        };
+        let body = serde_json::to_string(&request).unwrap();
+        reqwest::Body::from(body)
     }
 }

@@ -1223,11 +1223,7 @@ macro_rules! generate_embedding_tests {
 
             // Check that each embedding is a valid vector of floats
             for (i, embedding) in result.iter().enumerate() {
-                assert!(
-                    !embedding.is_empty(),
-                    "Embedding {} should not be empty",
-                    i
-                );
+                assert!(!embedding.is_empty(), "Embedding {} should not be empty", i);
 
                 for (j, value) in embedding.iter().enumerate() {
                     assert!(

@@ -182,6 +182,7 @@ impl From<EmbeddingModelOptions> for GoogleEmbeddingOptions {
         let requests = value
             .into_iter()
             .map(|text| types::EmbedContentRequest {
+                model: String::new(), // will be set in embedding_model.rs
                 content: Content {
                     role: Role::User,
                     parts: vec![Part {

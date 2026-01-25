@@ -30,8 +30,15 @@ impl<M: ModelName> EmbeddingModel for Google<M> {
         // Convert input to Google embedding options
         let mut options: crate::providers::google::client::GoogleEmbeddingOptions = input.into();
 
+        let embedding_model = model.embedding_options.model.clone();
+
         // Set the model name from the current model
-        options.model = model.embedding_options.model.clone();
+        options.model = embedding_model.clone();
+
+        // Set the model name inside parts
+        let _ = options.requests.iter_mut().for_each(|r| {
+            r.model = format!("models/{}", embedding_model.clone());
+        });
 
         // Update the model's embedding options
         model.embedding_options = options;

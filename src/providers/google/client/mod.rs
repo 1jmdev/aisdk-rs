@@ -123,7 +123,7 @@ impl<M: ModelName> EmbeddingClient for Google<M> {
 
     fn path(&self) -> String {
         format!(
-            "/v1/models/{}:batchEmbedContents",
+            "/v1beta/models/{}:batchEmbedContents",
             self.embedding_options.model
         )
     }

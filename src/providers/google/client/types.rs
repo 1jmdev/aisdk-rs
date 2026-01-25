@@ -339,6 +339,7 @@ pub(crate) struct BatchEmbedContentsRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct EmbedContentRequest {
+    pub(crate) model: String,
     pub(crate) content: Content,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) task_type: Option<String>,

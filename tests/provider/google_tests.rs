@@ -1,6 +1,6 @@
 //! Google provider integration tests.
 
-use aisdk::providers::google::{Gemini25Flash, Google, TextEmbedding004};
+use aisdk::providers::google::{Gemini25Flash, Google};
 
 // Include all macro definitions
 include!("macros.rs");
@@ -14,7 +14,7 @@ generate_language_model_tests!(
     tool_model:  Google::gemini_3_flash_preview(),
     structured_output_model:  Google::gemini_3_flash_preview(),
     reasoning_model: Google::gemini_3_flash_preview(),
-    embedding_model: Google::text_embedding_004(),
+    embedding_model: Google::gemini_embedding_001(),
     skip_reasoning: true,
     skip_tool: false,
     skip_structured_output: false,

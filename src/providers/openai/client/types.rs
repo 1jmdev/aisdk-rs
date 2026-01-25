@@ -446,9 +446,3 @@ pub(crate) struct OpenAIEmbeddingOptions {
     pub dimensions: Option<usize>,
     pub encoding_format: Option<String>,
 }
-
-impl OpenAIEmbeddingOptions {
-    pub(crate) fn builder() -> OpenAIEmbeddingOptionsBuilder {
-        OpenAIEmbeddingOptionsBuilder::default()
-    }
-}

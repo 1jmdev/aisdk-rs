@@ -23,7 +23,7 @@ pub struct OpenAI<M: ModelName> {
     pub(crate) lm_options: OpenAILanguageModelOptions,
     /// Options for Embedding Model
     pub(crate) embedding_options: OpenAIEmbeddingOptions,
-    _phantom: std::marker::PhantomData<M>,
+    pub(crate) _phantom: std::marker::PhantomData<M>,
 }
 
 impl<M: ModelName> OpenAI<M> {

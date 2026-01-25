@@ -34,12 +34,6 @@ pub(crate) struct GoogleEmbeddingOptions {
     pub(crate) requests: Vec<types::EmbedContentRequest>,
 }
 
-impl GoogleEmbeddingOptions {
-    pub(crate) fn builder() -> GoogleEmbeddingOptionsBuilder {
-        GoogleEmbeddingOptionsBuilder::default()
-    }
-}
-
 impl<M: ModelName> LanguageModelClient for Google<M> {
     type Response = types::GenerateContentResponse;
     type StreamEvent = types::GoogleStreamEvent;

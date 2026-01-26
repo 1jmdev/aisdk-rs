@@ -2,7 +2,7 @@ use crate::core::embedding_model::{EmbeddingModel, EmbeddingModelOptions, Embedd
 use crate::error::Result;
 use derive_builder::Builder;
 
-/// OpenAI Embeddings
+/// Options for embedding generation requests to be used by `embed`.
 #[derive(Builder, Debug, Clone)]
 #[allow(dead_code)]
 pub struct EmbeddingModelRequest<M: EmbeddingModel> {

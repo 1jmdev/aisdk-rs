@@ -184,7 +184,7 @@ impl From<EmbeddingModelOptions> for types::OpenAIEmbeddingOptions {
             input: value.input,
             model: "".to_string(), // will be set in mod.rs
             user: None,
-            dimensions: None, // TODO: add dimensions options to core options
+            dimensions: value.dimensions,
             encoding_format: None,
         }
     }

@@ -102,7 +102,7 @@ impl<M: EmbeddingModel> EmbeddingModelRequestBuilder<M> {
             model: None,
             options: EmbeddingModelOptions::builder()
                 .input(vec![])
-                .dimensions(0)
+                .dimensions(None)
                 .build()
                 .unwrap(),
             state: std::marker::PhantomData,
@@ -164,7 +164,7 @@ impl<M: EmbeddingModel> EmbeddingModelRequestBuilder<M, OptionsStage> {
         mut self,
         dimensions: usize,
     ) -> EmbeddingModelRequestBuilder<M, OptionsStage> {
-        self.options.dimensions = dimensions;
+        self.options.dimensions = Some(dimensions);
         self
     }
 

@@ -193,7 +193,7 @@ impl From<EmbeddingModelOptions> for GoogleEmbeddingOptions {
                 },
                 task_type: None,
                 title: None,
-                output_dimensionality: None,
+                output_dimensionality: value.dimensions,
             })
             .collect();
 

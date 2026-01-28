@@ -19,7 +19,7 @@ pub struct EmbeddingModelOptions {
     /// The desired number of embeddings to generate. This allowed value depends on the
     /// model used and if the provider returns an error for invalid dimensions `embed`
     /// will propagate the error.
-    pub dimensions: usize,
+    pub dimensions: Option<usize>,
 }
 
 impl EmbeddingModelOptions {

@@ -27,7 +27,7 @@ impl<M: ModelName> EmbeddingModel for OpenRouter<M> {
                 input: vec![],
                 model: self.inner.options.model.clone(),
                 user: None,
-                dimensions: None,
+                dimensions: input.dimensions,
                 encoding_format: None,
             },
             _phantom: std::marker::PhantomData,

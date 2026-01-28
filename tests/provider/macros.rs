@@ -1189,7 +1189,7 @@ macro_rules! generate_embedding_tests {
                 !result[0].is_empty(),
                 "Expected embedding vector to be non-empty"
             );
-            assert_eq!(dbg!(result.len()), 1);
+            assert_eq!(result[0].len(), 100);
 
             // Check that all values are valid floats (not NaN or infinity)
             for value in &result[0] {

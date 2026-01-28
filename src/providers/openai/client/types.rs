@@ -442,7 +442,10 @@ pub(crate) struct OpenAIEmbeddingOptions {
     // any array must be 2048 dimensions or less.
     pub input: Vec<String>,
     pub model: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub user: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub dimensions: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub encoding_format: Option<String>,
 }

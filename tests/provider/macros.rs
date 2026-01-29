@@ -1218,8 +1218,6 @@ macro_rules! generate_embedding_tests {
                 .await
                 .expect("Embedding request failed");
 
-            dbg!(&result);
-
             // Check that we got back embeddings for all inputs
             assert_eq!(
                 result.len(),

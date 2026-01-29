@@ -18,5 +18,5 @@ generate_language_model_tests!(
     skip_tool: false,
     skip_structured_output: true,
     skip_streaming: false,
-    skip_embedding: false
+    skip_embedding: true  // Couldn't find free embedding model
 );

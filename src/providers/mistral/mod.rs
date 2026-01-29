@@ -16,10 +16,8 @@ crate::openai_compatible_provider!(
     Mistral,
     MistralBuilder,
     MistralProviderSettings,
-    "Mistral",
-    "mistral-large",
-    "mistral_large()"
+    "mistral-large"
 );
 
 // Generate the language model implementation
-crate::openai_compatible_language_model!(Mistral, "Mistral");
+crate::openai_compatible_language_model!(Mistral);

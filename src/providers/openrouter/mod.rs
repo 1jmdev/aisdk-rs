@@ -16,13 +16,11 @@ crate::openai_compatible_provider!(
     OpenRouter,
     OpenRouterBuilder,
     OpenRouterProviderSettings,
-    "OpenRouter",
-    "anthropic/claude-3.5-sonnet",
-    "anthropic_claude_3_5_sonnet()"
+    "anthropic/claude-3.5-sonnet"
 );
 
 // Generate the language model implementation
-crate::openai_compatible_language_model!(OpenRouter, "OpenRouter");
+crate::openai_compatible_language_model!(OpenRouter);
 
 // Generate the embedding model implementation
-crate::openai_compatible_embedding_model!(OpenRouter, "OpenRouter");
+crate::openai_compatible_embedding_model!(OpenRouter);

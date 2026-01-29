@@ -16,10 +16,8 @@ crate::openai_compatible_provider!(
     AmazonBedrock,
     AmazonBedrockBuilder,
     AmazonBedrockProviderSettings,
-    "Amazon Bedrock",
-    "anthropic.claude-3-5-sonnet-20241022-v2:0",
-    "anthropic_claude_3_5_sonnet_v1_0()"
+    "anthropic.claude-3-5-sonnet-20241022-v2:0"
 );
 
 // Generate the language model implementation
-crate::openai_compatible_language_model!(AmazonBedrock, "Amazon Bedrock");
+crate::openai_compatible_language_model!(AmazonBedrock);

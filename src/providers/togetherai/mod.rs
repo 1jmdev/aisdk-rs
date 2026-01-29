@@ -16,13 +16,11 @@ crate::openai_compatible_provider!(
     TogetherAI,
     TogetherAIBuilder,
     TogetherAIProviderSettings,
-    "Together AI",
-    "Llama-3.3-70B-Instruct-Turbo",
-    "llama_3_3_70b_spec_dec()"
+    "Llama-3.3-70B-Instruct-Turbo"
 );
 
 // Generate the language model implementation
-crate::openai_compatible_language_model!(TogetherAI, "Together AI");
+crate::openai_compatible_language_model!(TogetherAI);
 
 // Generate the embedding model implementation
-crate::openai_compatible_embedding_model!(TogetherAI, "Together AI");
+crate::openai_compatible_embedding_model!(TogetherAI);

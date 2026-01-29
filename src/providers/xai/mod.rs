@@ -12,14 +12,7 @@ crate::openai_compatible_settings!(
 );
 
 // Generate the provider struct and builder
-crate::openai_compatible_provider!(
-    XAI,
-    XAIBuilder,
-    XAISettings,
-    "xAI",
-    "grok-2-latest",
-    "grok_2()"
-);
+crate::openai_compatible_provider!(XAI, XAIBuilder, XAISettings, "grok-2-latest");
 
 // Generate the language model implementation
-crate::openai_compatible_language_model!(XAI, "xAI");
+crate::openai_compatible_language_model!(XAI);

@@ -16,10 +16,8 @@ crate::openai_compatible_provider!(
     Groq,
     GroqBuilder,
     GroqProviderSettings,
-    "Groq",
-    "llama-3.3-70b-specdec",
-    "llama_3_3_70b_spec_dec()"
+    "llama-3.3-70b-specdec"
 );
 
 // Generate the language model implementation
-crate::openai_compatible_language_model!(Groq, "Groq");
+crate::openai_compatible_language_model!(Groq);

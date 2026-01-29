@@ -16,10 +16,8 @@ crate::openai_compatible_provider!(
     DeepSeek,
     DeepSeekBuilder,
     DeepSeekProviderSettings,
-    "DeepSeek",
-    "deepseek-chat",
-    "deepseek_chat()"
+    "deepseek-chat"
 );
 
 // Generate the language model implementation
-crate::openai_compatible_language_model!(DeepSeek, "DeepSeek");
+crate::openai_compatible_language_model!(DeepSeek);

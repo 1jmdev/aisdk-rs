@@ -6,6 +6,12 @@ pub mod openai;
 #[cfg(feature = "openai")]
 pub use openai::OpenAI;
 
+// Public OpenAI-compatible provider
+#[cfg(feature = "openaicompatible")]
+pub mod openai_compatible;
+#[cfg(feature = "openaicompatible")]
+pub use openai_compatible::OpenAICompatible;
+
 #[cfg(feature = "anthropic")]
 pub mod anthropic;
 #[cfg(feature = "anthropic")]

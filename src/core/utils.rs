@@ -1,7 +1,9 @@
 //! Helper functions for `aisdk`
 
+use reqwest::{IntoUrl, Url};
+
 use crate::{
-    Error,
+    Error, Result,
     core::{Message, language_model::LanguageModelOptions, messages::TaggedMessage},
 };
 
@@ -118,6 +120,38 @@ pub(crate) fn validate_base_url(s: &str) -> crate::error::Result<String> {
     Ok(url.to_string())
 }
 
+/// Joins a base URL with a path, handling trailing/leading slashes automatically.
+///
+/// This function normalizes the URL components to ensure proper joining:
+/// - Strips trailing slashes from base_url
+/// - Strips leading slashes from path
+/// - Joins them with a single slash
+///
+/// # Examples
+///
+/// ```ignore
+/// // All of these produce "https://api.example.com/v1/chat/completions"
+/// join_url("https://api.example.com/v1", "chat/completions");
+/// join_url("https://api.example.com/v1/", "chat/completions");
+/// join_url("https://api.example.com/v1", "/chat/completions");
+/// join_url("https://api.example.com/v1/", "/chat/completions");
+/// ```
+pub(crate) fn join_url(base_url: impl IntoUrl, path: &str) -> Result<Url> {
+    let base_url = base_url
+        .into_url()
+        .map_err(|_| Error::InvalidInput("Invalid base URL".into()))?;
+
+    // Normalize: strip trailing slashes from base, strip leading slashes from path
+    let base_str = base_url.as_str().trim_end_matches('/');
+    let path_str = path.trim_start_matches('/');
+
+    // Join with a single slash
+    let full_url = format!("{}/{}", base_str, path_str);
+
+    Url::parse(&full_url)
+        .map_err(|_| Error::InvalidInput("Failed to join base URL and path".into()))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -144,5 +178,20 @@ mod tests {
     #[test]
     fn test_sum_options_both_none() {
         assert_eq!(sum_options(None, None), None);
+    }
+
+    #[test]
+    fn test_join_url() {
+        let url = join_url("https://api.example.com/v1", "chat/completions").unwrap();
+        assert_eq!(url.as_str(), "https://api.example.com/v1/chat/completions");
+
+        let url = join_url("https://api.example.com/v1/", "chat/completions").unwrap();
+        assert_eq!(url.as_str(), "https://api.example.com/v1/chat/completions");
+
+        let url = join_url("https://api.example.com/v1", "/chat/completions").unwrap();
+        assert_eq!(url.as_str(), "https://api.example.com/v1/chat/completions");
+
+        let url = join_url("https://api.example.com/v1/", "/chat/completions").unwrap();
+        assert_eq!(url.as_str(), "https://api.example.com/v1/chat/completions");
     }
 }

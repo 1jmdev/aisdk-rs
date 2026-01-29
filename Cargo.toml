@@ -15,8 +15,9 @@ keywords = ["ai", "sdk", "aisdk", "ai-sdk-rs", "openai"]
 categories = ["api-bindings", "asynchronous"]
 
 [features]
-full = ["prompt", "openai", "openaichatcompletions", "anthropic", "groq", "vercel", "google", "openrouter", "deepseek", "amazon-bedrock", "togetherai", "xai"]
+full = ["prompt", "openai", "openaicompatible", "openaichatcompletions", "anthropic", "groq", "vercel", "google", "openrouter", "deepseek", "amazon-bedrock", "togetherai", "xai"]
 openai = []
+openaicompatible = ["openaichatcompletions"]
 openaichatcompletions = []
 anthropic = []
 groq = ["openaichatcompletions"]
@@ -69,6 +70,11 @@ pre-release-replacements = [
 name = "openai_tests"
 path = "tests/provider/openai_tests.rs"
 required-features = ["openai", "test-access"]
+
+[[test]]
+name = "openai_compatible_tests"
+path = "tests/provider/openai_compatible_tests.rs"
+required-features = ["openaicompatible", "test-access"]
 
 [[test]]
 name = "anthropic_tests"

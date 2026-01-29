@@ -43,7 +43,16 @@ impl From<LanguageModelOptions> for client::ChatCompletionsOptions {
         });
 
         let response_format = options.schema.map(|schema| {
-            let json_value = serde_json::to_value(schema).unwrap();
+            let mut json_value = serde_json::to_value(schema).unwrap();
+
+            // Ensure required fields for OpenAI Structured Outputs
+            if let serde_json::Value::Object(ref mut obj) = json_value {
+                obj.insert(
+                    "additionalProperties".to_string(),
+                    serde_json::Value::Bool(false),
+                );
+            }
+
             types::ResponseFormat::JsonSchema {
                 json_schema: types::JsonSchemaDefinition {
                     name: json_value
@@ -70,6 +79,14 @@ impl From<LanguageModelOptions> for client::ChatCompletionsOptions {
             .to_string()
         });
 
+        let tool_choice = if tools.is_some() {
+            Some(types::ToolChoice::String("auto".to_string()))
+        } else {
+            None
+        };
+
+        let parallel_tool_calls = if tools.is_some() { Some(true) } else { None };
+
         client::ChatCompletionsOptions {
             model: "".to_string(),
             messages,
@@ -94,8 +111,8 @@ impl From<LanguageModelOptions> for client::ChatCompletionsOptions {
             temperature: options.temperature.map(|t| t as f32 / 100.0),
             top_p: options.top_p.map(|t| t as f32 / 100.0),
             tools,
-            tool_choice: None,
-            parallel_tool_calls: None,
+            tool_choice,
+            parallel_tool_calls,
             reasoning_effort,
             verbosity: None,
         }

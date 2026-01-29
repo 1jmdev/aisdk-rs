@@ -7,7 +7,7 @@ crate::openai_compatible_settings!(
     GroqProviderSettings,
     GroqProviderSettingsBuilder,
     "Groq",
-    "https://api.groq.com/openai/",
+    "https://api.groq.com/openai/v1/",
     "GROQ_API_KEY"
 );
 

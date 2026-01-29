@@ -1,6 +1,7 @@
 //! This module provides the client for interacting with the AI providers.
 //! It is a thin wrapper around the `reqwest` crate.
 
+use crate::core::utils::join_url;
 use crate::error::{Error, Result};
 use futures::Stream;
 use futures::StreamExt;
@@ -219,13 +220,7 @@ pub(crate) trait LanguageModelClient {
     fn headers(&self) -> reqwest::header::HeaderMap;
 
     async fn send(&self, base_url: impl IntoUrl) -> Result<Self::Response> {
-        let base_url = base_url
-            .into_url()
-            .map_err(|_| Error::InvalidInput("Invalid base URL".into()))?;
-
-        let url = base_url
-            .join(&self.path())
-            .map_err(|_| Error::InvalidInput("Failed to join base URL and path".into()))?;
+        let url = join_url(base_url, &self.path())?;
 
         // Serialize body once to avoid consumption issues on retries
         let body_bytes = {
@@ -277,13 +272,7 @@ pub(crate) trait LanguageModelClient {
     {
         let client = reqwest::Client::new();
 
-        let base_url = base_url
-            .into_url()
-            .map_err(|_| Error::InvalidInput("Invalid base URL".into()))?;
-
-        let url = base_url
-            .join(&self.path())
-            .map_err(|_| Error::InvalidInput("Failed to join base URL and path".into()))?;
+        let url = join_url(base_url, &self.path())?;
 
         // Establish the event source stream directly
         // Note: Status code errors (including 429) will be surfaced as stream events
@@ -319,6 +308,56 @@ pub(crate) trait LanguageModelClient {
         });
 
         Ok(Box::pin(stream))
+    }
+}
+/// Trait for embedding model clients to interact with embedding APIs.
+#[allow(dead_code)]
+pub(crate) trait EmbeddingClient {
+    type Response: DeserializeOwned + std::fmt::Debug + Clone;
+
+    fn path(&self) -> String;
+    fn method(&self) -> reqwest::Method;
+    fn query_params(&self) -> Vec<(&str, &str)>;
+    fn body(&self) -> reqwest::Body;
+    fn headers(&self) -> reqwest::header::HeaderMap;
+
+    async fn send(&self, base_url: impl IntoUrl) -> Result<Self::Response> {
+        let base_url = base_url
+            .into_url()
+            .map_err(|_| Error::InvalidInput("Invalid base URL".into()))?;
+
+        let url = base_url
+            .join(&self.path())
+            .map_err(|_| Error::InvalidInput("Failed to join base URL and path".into()))?;
+
+        // Serialize body once to avoid consumption issues on retries
+        let body_bytes = {
+            let body = self.body();
+            // Convert Body to bytes - this is the critical fix for retry body consumption
+            match body.as_bytes() {
+                Some(bytes) => bytes.to_vec(),
+                None => {
+                    // If body doesn't have as_bytes (streaming body), we can't retry it
+                    log::warn!("Request body is not retryable (streaming body)");
+                    vec![]
+                }
+            }
+        };
+
+        let method = self.method();
+        let headers = self.headers();
+        let query_params = self.query_params();
+        let config = RetryConfig::default();
+
+        retry_request(
+            url,
+            method,
+            headers,
+            query_params,
+            move || reqwest::Body::from(body_bytes.clone()),
+            config,
+        )
+        .await
     }
 }
 
@@ -867,56 +906,5 @@ mod tests {
 
         let result = parse_retry_after(&headers);
         assert_eq!(result, None); // Should fail to parse as u64
-    }
-}
-
-/// Trait for embedding model clients to interact with embedding APIs.
-#[allow(dead_code)]
-pub(crate) trait EmbeddingClient {
-    type Response: DeserializeOwned + std::fmt::Debug + Clone;
-
-    fn path(&self) -> String;
-    fn method(&self) -> reqwest::Method;
-    fn query_params(&self) -> Vec<(&str, &str)>;
-    fn body(&self) -> reqwest::Body;
-    fn headers(&self) -> reqwest::header::HeaderMap;
-
-    async fn send(&self, base_url: impl IntoUrl) -> Result<Self::Response> {
-        let base_url = base_url
-            .into_url()
-            .map_err(|_| Error::InvalidInput("Invalid base URL".into()))?;
-
-        let url = base_url
-            .join(&self.path())
-            .map_err(|_| Error::InvalidInput("Failed to join base URL and path".into()))?;
-
-        // Serialize body once to avoid consumption issues on retries
-        let body_bytes = {
-            let body = self.body();
-            // Convert Body to bytes - this is the critical fix for retry body consumption
-            match body.as_bytes() {
-                Some(bytes) => bytes.to_vec(),
-                None => {
-                    // If body doesn't have as_bytes (streaming body), we can't retry it
-                    log::warn!("Request body is not retryable (streaming body)");
-                    vec![]
-                }
-            }
-        };
-
-        let method = self.method();
-        let headers = self.headers();
-        let query_params = self.query_params();
-        let config = RetryConfig::default();
-
-        retry_request(
-            url,
-            method,
-            headers,
-            query_params,
-            move || reqwest::Body::from(body_bytes.clone()),
-            config,
-        )
-        .await
     }
 }

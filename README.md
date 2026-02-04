@@ -140,8 +140,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ### Prompts
 
-The AISDK prompt feature provides a powerful, file-based template system for managing AI prompts using the Tera template engine. It allows you to create reusable prompt templates with variable substitution, conditionals, loops, and template inclusion. See [Examples](https://aisdk.rs/docs/concepts/prompt) for more template examples. Enable with ```cargo add aisdk --features prompt```
-
+The AISDK prompt feature provides, file-based template system for managing AI prompts using the Tera template engine. It allows you to create reusable prompt templates with variable substitution, conditionals, loops, and template inclusion. See [Examples](https://aisdk.rs/docs/concepts/prompt) for more template examples. Enable with `cargo add aisdk --features prompt`
 
 ### Roadmap
 
@@ -151,21 +150,21 @@ The AISDK prompt feature provides a powerful, file-based template system for man
 - [x] Structured Output (JSON Schema)
 - [x] Language Model Request Support (Text Generation, Streaming)
 - [x] Compatible with [Vercel AI SDK UI](https://ai-sdk.dev/docs/ai-sdk-ui/overview) (React, Solid, Vue, Svelte, …)
-- [ ] Embedding Model Request Support
+- [x] Embedding Model Request Support
 - [ ] Image Model Request Support
 - [ ] Voice Model Request Support
 - [ ] Additional Providers
-    - [x] Anthropic
-    - [x] Amazon Bedrock
-    - [x] DeepSeek
-    - [x] Google
-    - [x] Groq
-    - [x] OpenAI
-    - [x] OpenRouter
-    - [x] TogetherAI
-    - [x] Vercel
-    - [x] xAI (Grok)
-    - [ ] more to come...
+  - [x] Anthropic
+  - [x] Amazon Bedrock
+  - [x] DeepSeek
+  - [x] Google
+  - [x] Groq
+  - [x] OpenAI
+  - [x] OpenRouter
+  - [x] TogetherAI
+  - [x] Vercel
+  - [x] xAI (Grok)
+  - [x] and 54+ OpenAI compatible providers
 
 ## Contributing
 

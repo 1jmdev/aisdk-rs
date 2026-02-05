@@ -35,12 +35,17 @@ pub use vercel::Vercel;
 #[cfg(feature = "openrouter")]
 pub mod openrouter;
 #[cfg(feature = "openrouter")]
-pub use openrouter::OpenRouter;
+pub use openrouter::Openrouter;
 
 #[cfg(feature = "deepseek")]
 pub mod deepseek;
 #[cfg(feature = "deepseek")]
-pub use deepseek::DeepSeek;
+pub use deepseek::Deepseek;
+
+#[cfg(feature = "mistral")]
+pub mod mistral;
+#[cfg(feature = "mistral")]
+pub use mistral::Mistral;
 
 #[cfg(feature = "amazon-bedrock")]
 pub mod amazon_bedrock;
@@ -60,3 +65,5 @@ pub use xai::XAI;
 // Internal module for OpenAI Chat Completions API compatible providers
 #[cfg(feature = "openaichatcompletions")]
 pub(crate) mod openai_chat_completions;
+
+// OpenAI-compatible providers

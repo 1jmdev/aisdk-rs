@@ -37,6 +37,9 @@ macro_rules! openai_compatible_settings {
 
                 /// The API key for authentication.
                 pub api_key: String,
+
+                /// Custom API path override.
+                pub path: Option<String>,
             }
 
             impl Default for $settings_struct {
@@ -45,6 +48,7 @@ macro_rules! openai_compatible_settings {
                         provider_name: $provider_display_name.to_string(),
                         base_url: $default_base_url.to_string(),
                         api_key: std::env::var($api_key_env).unwrap_or_default(),
+                        path: None,
                     }
                 }
             }
@@ -229,6 +233,7 @@ macro_rules! openai_compatible_provider {
                 inner.settings.provider_name = settings.provider_name.clone();
                 inner.settings.base_url = settings.base_url.clone();
                 inner.settings.api_key = settings.api_key.clone();
+                inner.settings.path = settings.path.clone();
 
                 Self { settings, inner }
             }
@@ -274,6 +279,17 @@ macro_rules! openai_compatible_provider {
                 let key = api_key.into();
                 self.settings.api_key = key.clone();
                 self.inner.settings.api_key = key;
+                self
+            }
+
+            #[doc = concat!(
+                "Sets a custom API path for the ", stringify!($provider_struct), " provider, ",
+                "overriding the default \"chat/completions\"."
+            )]
+            pub fn path(mut self, path: impl Into<String>) -> Self {
+                let p = Some(path.into());
+                self.settings.path = p.clone();
+                self.inner.settings.path = p;
                 self
             }
 

@@ -160,6 +160,12 @@ impl<M: ModelName> GoogleBuilder<M> {
         self
     }
 
+    /// Sets a custom API path, overriding the default dynamic path.
+    pub fn path(mut self, path: impl Into<String>) -> Self {
+        self.settings.path = Some(path.into());
+        self
+    }
+
     /// Builds the Google provider settings.
     pub fn build(self) -> Result<Google<M>, Error> {
         // validate base url

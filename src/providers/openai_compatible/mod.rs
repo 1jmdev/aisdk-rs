@@ -112,6 +112,7 @@ impl<M: ModelName> Default for OpenAICompatibleBuilder<M> {
         inner.settings.provider_name = settings.provider_name.clone();
         inner.settings.base_url = settings.base_url.clone();
         inner.settings.api_key = settings.api_key.clone();
+        inner.settings.path = settings.path.clone();
 
         Self { settings, inner }
     }
@@ -163,6 +164,14 @@ impl<M: ModelName> OpenAICompatibleBuilder<M> {
         let key = api_key.into();
         self.settings.api_key = key.clone();
         self.inner.settings.api_key = key;
+        self
+    }
+
+    /// Sets a custom API path, overriding the default "chat/completions".
+    pub fn path(mut self, path: impl Into<String>) -> Self {
+        let p = Some(path.into());
+        self.settings.path = p.clone();
+        self.inner.settings.path = p;
         self
     }
 

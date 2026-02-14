@@ -39,6 +39,9 @@ impl<M: ModelName> LanguageModelClient for Google<M> {
     type StreamEvent = types::GoogleStreamEvent;
 
     fn path(&self) -> String {
+        if let Some(ref path) = self.settings.path {
+            return path.clone();
+        }
         if self.lm_options.streaming {
             return format!(
                 "/v1beta/models/{}:streamGenerateContent",
@@ -84,7 +87,7 @@ impl<M: ModelName> LanguageModelClient for Google<M> {
                     let value: serde_json::Value =
                         serde_json::from_str(&msg.data).map_err(|e| Error::ApiError {
                             status_code: None,
-                            details: format!("Invalid JSON in SSE data: {}", e),
+                            details: format!("Invalid JSON in SSE data: {e}"),
                         })?;
 
                     Ok(

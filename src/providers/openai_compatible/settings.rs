@@ -14,6 +14,9 @@ pub struct OpenAICompatibleSettings {
 
     /// The API key for the OpenAI-compatible API.
     pub api_key: String,
+
+    /// Custom API path override.
+    pub path: Option<String>,
 }
 
 impl Default for OpenAICompatibleSettings {
@@ -23,6 +26,7 @@ impl Default for OpenAICompatibleSettings {
             provider_name: "OpenAICompatible".to_string(),
             base_url: "https://api.openai.com/v1".to_string(),
             api_key: std::env::var("OPENAI_API_KEY").unwrap_or_default(),
+            path: None,
         }
     }
 }

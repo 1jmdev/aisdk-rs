@@ -59,7 +59,10 @@ impl<M: ModelName> LanguageModelClient for Anthropic<M> {
     type StreamEvent = AnthropicStreamEvent;
 
     fn path(&self) -> String {
-        "/messages".to_string()
+        self.settings
+            .path
+            .clone()
+            .unwrap_or_else(|| "/messages".to_string())
     }
 
     fn method(&self) -> reqwest::Method {
@@ -99,7 +102,7 @@ impl<M: ModelName> LanguageModelClient for Anthropic<M> {
                     let value: serde_json::Value =
                         serde_json::from_str(&msg.data).map_err(|e| Error::ApiError {
                             status_code: None,
-                            details: format!("Invalid JSON in SSE data: {}", e),
+                            details: format!("Invalid JSON in SSE data: {e}"),
                         })?;
 
                     Ok(serde_json::from_value::<AnthropicStreamEvent>(value)
@@ -114,7 +117,7 @@ impl<M: ModelName> LanguageModelClient for Anthropic<M> {
                 };
                 Err(Error::ApiError {
                     status_code,
-                    details: format!("SSE error: {}", e),
+                    details: format!("SSE error: {e}"),
                 })
             }
         }

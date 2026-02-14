@@ -146,7 +146,7 @@ pub(crate) fn join_url(base_url: impl IntoUrl, path: &str) -> Result<Url> {
     let path_str = path.trim_start_matches('/');
 
     // Join with a single slash
-    let full_url = format!("{}/{}", base_str, path_str);
+    let full_url = format!("{base_str}/{path_str}");
 
     Url::parse(&full_url)
         .map_err(|_| Error::InvalidInput("Failed to join base URL and path".into()))

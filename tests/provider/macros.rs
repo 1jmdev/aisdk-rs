@@ -56,9 +56,9 @@ macro_rules! generate_language_model_tests {
     ) => {
         use aisdk::core::tools::ToolExecute;
         use aisdk::core::{
-            DynamicModel, LanguageModelRequest, LanguageModelStreamChunkType, Message,
             language_model::{LanguageModelResponseContentType, StopReason},
             tools::Tool,
+            DynamicModel, LanguageModelRequest, LanguageModelStreamChunkType, Message,
         };
         use aisdk::macros::tool;
         use dotenv::dotenv;
@@ -101,6 +101,7 @@ macro_rules! generate_provider_has_default_interface {
                 .provider_name("test-provider".to_string())
                 .api_key("test-api-key")
                 .base_url("http://localhost:8080".to_string())
+                .path("/custom/path")
                 .build();
 
             // check if provider didn't throw an error
@@ -111,6 +112,7 @@ macro_rules! generate_provider_has_default_interface {
             assert_eq!(provider.settings.provider_name, "test-provider");
             assert_eq!(provider.settings.api_key, "test-api-key");
             assert_eq!(provider.settings.base_url, "http://localhost:8080/");
+            assert_eq!(provider.settings.path, Some("/custom/path".to_string()));
 
             // should fail on invalid base url
             let provider2 = $provider_type::<$model_struct>::builder()
@@ -137,6 +139,14 @@ macro_rules! generate_provider_has_default_interface {
                 provider3.unwrap_err().to_string(),
                 "A required field is missing: api_key"
             );
+
+            let provider_no_path = $provider_type::<$model_struct>::builder()
+                .provider_name("test-provider-no-path")
+                .api_key("test-api-key")
+                .base_url("http://localhost:8080")
+                .build()
+                .unwrap();
+            assert_eq!(provider_no_path.settings.path, None);
 
             // should have model_name() method for dynamic model
             let _provider_dynamic = $provider_type::model_name("test-model".to_string());

@@ -176,6 +176,12 @@ impl<M: ModelName> AnthropicBuilder<M> {
         self
     }
 
+    /// Sets a custom API path, overriding the default "/messages".
+    pub fn path(mut self, path: impl Into<String>) -> Self {
+        self.settings.path = Some(path.into());
+        self
+    }
+
     /// Builds the Anthropic provider.
     ///
     /// Validates the configuration and creates the provider instance.

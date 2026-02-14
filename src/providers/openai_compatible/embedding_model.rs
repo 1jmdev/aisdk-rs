@@ -21,6 +21,7 @@ impl<M: ModelName> EmbeddingModel for OpenAICompatible<M> {
                 base_url: self.inner.settings.base_url.clone(),
                 api_key: self.inner.settings.api_key.clone(),
                 provider_name: self.inner.settings.provider_name.clone(),
+                path: self.inner.settings.path.clone(),
             },
             lm_options: Default::default(),
             embedding_options: crate::providers::openai::client::OpenAIEmbeddingOptions {

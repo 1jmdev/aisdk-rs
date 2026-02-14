@@ -106,8 +106,7 @@ impl<M: LanguageModel> LanguageModelRequest<M> {
                     Err(e) => {
                         options.stop_reason = Some(StopReason::Error(e.clone()));
                         let _ = tx.send(LanguageModelStreamChunkType::Failed(format!(
-                            "Model streaming failed: {}",
-                            e
+                            "Model streaming failed: {e}"
                         )));
                         return Err(e);
                     }

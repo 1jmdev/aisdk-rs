@@ -15,6 +15,10 @@ pub struct AnthropicProviderSettings {
 
     /// The API key for the Anthropic API.
     pub api_key: String,
+
+    /// Custom API path override. When set, this path is used instead of the
+    /// default "/messages".
+    pub path: Option<String>,
 }
 
 impl Default for AnthropicProviderSettings {
@@ -24,6 +28,7 @@ impl Default for AnthropicProviderSettings {
             provider_name: "anthropic".to_string(),
             base_url: "https://api.anthropic.com/v1/".to_string(),
             api_key: std::env::var("ANTHROPIC_API_KEY").unwrap_or_default(),
+            path: None,
         }
     }
 }

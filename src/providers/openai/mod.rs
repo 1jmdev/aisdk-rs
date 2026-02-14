@@ -194,6 +194,12 @@ impl<M: ModelName> OpenAIBuilder<M> {
         self
     }
 
+    /// Sets a custom API path, overriding the default (e.g., "/v1/responses").
+    pub fn path(mut self, path: impl Into<String>) -> Self {
+        self.settings.path = Some(path.into());
+        self
+    }
+
     /// Builds the OpenAI provider.
     ///
     /// Validates the configuration and creates the provider instance.

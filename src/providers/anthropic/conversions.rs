@@ -91,7 +91,7 @@ impl From<LanguageModelOptions> for AnthropicOptions {
                     messages.push(AnthropicMessageParam::User {
                         content:
                             crate::providers::anthropic::client::AnthropicUserMessageContent::Text(
-                                format!("<developer>\n{}\n</developer>", dev),
+                                format!("<developer>\n{dev}\n</developer>"),
                             ),
                     });
                 }

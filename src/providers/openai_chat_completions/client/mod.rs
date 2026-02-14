@@ -17,7 +17,10 @@ impl<M: ModelName> LanguageModelClient for OpenAIChatCompletions<M> {
     type StreamEvent = ChatCompletionsStreamEvent;
 
     fn path(&self) -> String {
-        "chat/completions".to_string()
+        self.settings
+            .path
+            .clone()
+            .unwrap_or_else(|| "chat/completions".to_string())
     }
 
     fn method(&self) -> reqwest::Method {
@@ -57,7 +60,7 @@ impl<M: ModelName> LanguageModelClient for OpenAIChatCompletions<M> {
                     let chunk: ChatCompletionsStreamChunk = serde_json::from_str(&msg.data)
                         .map_err(|e| Error::ApiError {
                             status_code: None,
-                            details: format!("Invalid JSON in SSE: {}", e),
+                            details: format!("Invalid JSON in SSE: {e}"),
                         })?;
 
                     Ok(ChatCompletionsStreamEvent::Chunk(chunk))

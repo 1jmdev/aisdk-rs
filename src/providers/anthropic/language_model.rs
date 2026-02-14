@@ -292,8 +292,7 @@ impl<M: ModelName> LanguageModel for Anthropic<M> {
                                             collected.push(
                                                 LanguageModelResponseContentType::NotSupported(
                                                     format!(
-                                                        "Invalid tool json: {}",
-                                                        accumulated_json
+                                                        "Invalid tool json: {accumulated_json}"
                                                     ),
                                                 ),
                                             );

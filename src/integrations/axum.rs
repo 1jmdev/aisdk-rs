@@ -52,7 +52,7 @@ impl crate::core::StreamTextResponse {
             let mapped_stream = ui_stream.map(|result| match result {
                 Ok(chunk) => {
                     let json = serde_json::to_string(&chunk).map_err(|e| {
-                        crate::error::Error::Other(format!("JSON serialization error: {}", e))
+                        crate::error::Error::Other(format!("JSON serialization error: {e}"))
                     })?;
                     Ok(axum::response::sse::Event::default().data(json))
                 }

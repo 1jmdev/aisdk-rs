@@ -167,7 +167,7 @@ impl From<Message> for types::ChatMessage {
                     // Include as text with prefix
                     types::ChatMessage {
                         role: types::Role::Assistant,
-                        content: Some(format!("[Reasoning]: {}", content)),
+                        content: Some(format!("[Reasoning]: {content}")),
                         name: None,
                         tool_calls: None,
                         tool_call_id: None,

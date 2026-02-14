@@ -39,14 +39,14 @@ impl PromptEnv {
             .path(path.to_string())
             .variables(variables)
             .build()
-            .map_err(|e| Error::PromptError(format!("error building prompt: {:?}", e)))?;
+            .map_err(|e| Error::PromptError(format!("error building prompt: {e:?}")))?;
 
         let ctx = Context::from_serialize(prompt.variables.clone())
-            .map_err(|e| Error::PromptError(format!("error creating variable context: {:?}", e)))?;
+            .map_err(|e| Error::PromptError(format!("error creating variable context: {e:?}")))?;
 
         self.template
             .render(&prompt.path, &ctx)
-            .map_err(|e| Error::PromptError(format!("error rendering prompt: {:?}", e)))
+            .map_err(|e| Error::PromptError(format!("error rendering prompt: {e:?}")))
     }
 }
 

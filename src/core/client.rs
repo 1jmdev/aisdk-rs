@@ -141,7 +141,7 @@ where
                         e
                     );
                 } else {
-                    log::error!("Request failed: {}", e);
+                    log::error!("Request failed: {e}");
                 }
 
                 Error::ApiError {
@@ -154,14 +154,14 @@ where
         let response_headers = resp.headers().clone();
         let resp_text = resp.text().await.map_err(|e| Error::ApiError {
             status_code: e.status(),
-            details: format!("Failed to read response: {}", e),
+            details: format!("Failed to read response: {e}"),
         })?;
 
         if status.is_success() {
             log::debug!("Request succeeded on attempt {}", retry_count + 1);
             return serde_json::from_str(&resp_text).map_err(|e| Error::ApiError {
                 status_code: Some(status),
-                details: format!("Failed to parse response: {}", e),
+                details: format!("Failed to parse response: {e}"),
             });
         }
 
@@ -194,11 +194,7 @@ where
                 resp_text
             );
         } else {
-            log::error!(
-                "Request failed with non-retryable status {}: {}",
-                status,
-                resp_text
-            );
+            log::error!("Request failed with non-retryable status {status}: {resp_text}");
         }
 
         return Err(Error::ApiError {
@@ -285,7 +281,7 @@ pub(crate) trait LanguageModelClient {
             .eventsource()
             .map_err(|e| Error::ApiError {
                 status_code: None,
-                details: format!("SSE stream error: {}", e),
+                details: format!("SSE stream error: {e}"),
             })?;
 
         // Map events to deserialized StreamEvent ( ProviderStreamEvent )
@@ -541,10 +537,7 @@ mod tests {
 
         assert!(
             result >= min && result <= max,
-            "Result {:?} should be between {:?} and {:?}",
-            result,
-            min,
-            max
+            "Result {result:?} should be between {min:?} and {max:?}"
         );
     }
 
@@ -582,8 +575,7 @@ mod tests {
         // Let's be conservative and check it's close to 10000ms
         assert!(
             result >= Duration::from_millis(9000) && result <= Duration::from_millis(11000),
-            "Result {:?} should be around 10000ms ±10%",
-            result
+            "Result {result:?} should be around 10000ms ±10%"
         );
     }
 
@@ -616,8 +608,7 @@ mod tests {
         // Jitter: ±10% = 900ms to 1100ms
         assert!(
             result >= Duration::from_millis(900) && result <= Duration::from_millis(1100),
-            "Result {:?} should be around 1000ms ±10%",
-            result
+            "Result {result:?} should be around 1000ms ±10%"
         );
     }
 
@@ -714,8 +705,7 @@ mod tests {
         // Base: 10ms, jitter ±10% = 9ms to 11ms
         assert!(
             result >= Duration::from_millis(9) && result <= Duration::from_millis(11),
-            "Result {:?} should be around 10ms ±10%",
-            result
+            "Result {result:?} should be around 10ms ±10%"
         );
     }
 
@@ -729,10 +719,7 @@ mod tests {
             // Each result should be greater than or equal to previous (until cap)
             assert!(
                 result >= prev_result,
-                "Retry count {}: {:?} should be >= {:?}",
-                retry_count,
-                result,
-                prev_result
+                "Retry count {retry_count}: {result:?} should be >= {prev_result:?}"
             );
 
             // Each result should be approximately double the previous (until cap)
@@ -741,9 +728,7 @@ mod tests {
                 if result.as_millis() < config.max_wait.as_millis() {
                     assert!(
                         (ratio - 2.0).abs() < 0.01,
-                        "Retry count {}: ratio {} should be ~2.0",
-                        retry_count,
-                        ratio
+                        "Retry count {retry_count}: ratio {ratio} should be ~2.0"
                     );
                 }
             }

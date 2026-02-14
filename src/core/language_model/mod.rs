@@ -281,7 +281,7 @@ impl LanguageModelOptions {
             let tool_result_task = tools.execute(input.clone()).await;
             let tool_result = tool_result_task
                 .await
-                .map_err(|err| Error::ToolCallError(format!("Error executing tool: {}", err)))
+                .map_err(|err| Error::ToolCallError(format!("Error executing tool: {err}")))
                 .and_then(|result| result);
 
             let mut tool_output_infos = Vec::new();
@@ -289,7 +289,7 @@ impl LanguageModelOptions {
             let mut tool_output_info = ToolResultInfo::new(&input.tool.name);
             let output = match tool_result {
                 Ok(result) => serde_json::Value::String(result),
-                Err(err) => serde_json::Value::String(format!("Error: {}", err)),
+                Err(err) => serde_json::Value::String(format!("Error: {err}")),
             };
             tool_output_info.output(output);
             tool_output_info.id(&input.tool.id);
@@ -969,14 +969,14 @@ mod tests {
         for i in 0..1000 {
             messages.push(Message::Tool(ToolResultInfo::new(format!("tool{i}"))));
             if i % 100 == 0 {
-                messages.push(Message::User(format!("User message {}", i).into()));
+                messages.push(Message::User(format!("User message {i}").into()));
             }
         }
         let step = Step::new(0, messages);
         let results = step.tool_results().unwrap();
         assert_eq!(results.len(), 1000);
         for (i, result) in results.iter().enumerate() {
-            assert_eq!(result.tool.name, format!("tool{}", i));
+            assert_eq!(result.tool.name, format!("tool{i}"));
         }
     }
 }

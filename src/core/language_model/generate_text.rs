@@ -597,11 +597,11 @@ mod tests {
         let mut messages = Vec::new();
         // Add 1000 messages with tool results interspersed
         for i in 0..1000 {
-            messages.push(create_tool_result_message(0, &format!("tool{}", i)));
+            messages.push(create_tool_result_message(0, &format!("tool{i}")));
             if i % 100 == 0 {
                 messages.push(TaggedMessage::new(
                     0,
-                    Message::User(format!("User message {}", i).into()),
+                    Message::User(format!("User message {i}").into()),
                 ));
             }
         }
@@ -609,7 +609,7 @@ mod tests {
         let results = response.tool_results().unwrap();
         assert_eq!(results.len(), 1000);
         for (i, result) in results.iter().enumerate() {
-            assert_eq!(result.tool.name, format!("tool{}", i));
+            assert_eq!(result.tool.name, format!("tool{i}"));
         }
     }
 }

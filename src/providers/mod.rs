@@ -22,6 +22,11 @@ pub mod anthropic;
 #[cfg(feature = "anthropic")]
 pub use anthropic::Anthropic;
 
+#[cfg(feature = "claudecode")]
+pub mod claudecode;
+#[cfg(feature = "claudecode")]
+pub use claudecode::ClaudeCode;
+
 #[cfg(feature = "groq")]
 pub mod groq;
 #[cfg(feature = "groq")]

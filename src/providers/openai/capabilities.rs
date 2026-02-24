@@ -136,6 +136,18 @@ model_capabilities! {
             display_name: "GPT-5.2 Pro",
             capabilities: [ImageInputSupport, ReasoningSupport, StructuredOutputSupport, TextInputSupport, TextOutputSupport, ToolCallSupport]
         },
+        Gpt52Codex {
+            model_name: "gpt-5.2-codex",
+            constructor_name: gpt_5_2_codex,
+            display_name: "GPT-5.2 Codex",
+            capabilities: [ImageInputSupport, ReasoningSupport, StructuredOutputSupport, TextInputSupport, TextOutputSupport, ToolCallSupport]
+        },
+        Gpt53Codex {
+            model_name: "gpt-5.3-codex",
+            constructor_name: gpt_5_3_codex,
+            display_name: "GPT-5.3 Codex",
+            capabilities: [ImageInputSupport, ReasoningSupport, StructuredOutputSupport, TextInputSupport, TextOutputSupport, ToolCallSupport]
+        },
         Gpt5ChatLatest {
             model_name: "gpt-5-chat-latest",
             constructor_name: gpt_5_chat_latest,

@@ -143,7 +143,7 @@ impl From<Message> for Option<types::InputItem> {
             })),
             Message::System(s) => Some(types::InputItem::Item(types::MessageItem::InputMessage {
                 content: vec![types::ContentType::InputText { text: s.content }],
-                role: types::Role::System,
+                role: types::Role::Developer,
                 type_: "message".to_string(),
             })),
             Message::Developer(d) => {

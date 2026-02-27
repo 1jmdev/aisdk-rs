@@ -61,7 +61,7 @@ impl<M: LanguageModel> LanguageModelRequest<M> {
     ///                 println!("{}", text);
     ///             }
     ///         }
-    ///        
+    ///
     ///        Ok(())
     ///    }
     ///# }
@@ -83,7 +83,6 @@ impl<M: LanguageModel> LanguageModelRequest<M> {
         }));
 
         let (tx, stream) = LanguageModelStream::new();
-        let _ = tx.send(LanguageModelStreamChunkType::Start);
 
         let mut model = self.model.clone();
 
@@ -100,6 +99,7 @@ impl<M: LanguageModel> LanguageModelRequest<M> {
                     hook(&mut options);
                 }
 
+                let _ = tx.send(LanguageModelStreamChunkType::Start);
                 let response_result = model.stream_text(options.clone()).await;
                 let mut response = match response_result {
                     Ok(r) => r,
@@ -129,6 +129,12 @@ impl<M: LanguageModel> LanguageModelRequest<M> {
                                                     current_step_id,
                                                     assistant_msg,
                                                 ));
+                                                let _ = tx.send(LanguageModelStreamChunkType::End(
+                                                    AssistantMessage {
+                                                        content: final_msg.content.clone(),
+                                                        usage: final_msg.usage.clone(),
+                                                    },
+                                                ));
                                                 options.stop_reason = Some(StopReason::Finish);
                                             }
                                             LanguageModelResponseContentType::Reasoning {
@@ -146,7 +152,6 @@ impl<M: LanguageModel> LanguageModelRequest<M> {
                                                     usage: final_msg.usage.clone(),
                                                     }),
                                                 ));
-                                                options.stop_reason = Some(StopReason::Finish);
                                             }
                                             LanguageModelResponseContentType::ToolCall(
                                                 ref tool_info,
@@ -184,14 +189,17 @@ impl<M: LanguageModel> LanguageModelRequest<M> {
                                             break;
                                         }
                                     }
-                                    LanguageModelStreamChunk::Delta(other) => match other {
-                                        // Propagate text and reasoning chunks
-                                        LanguageModelStreamChunkType::Text(_)
-                                        | LanguageModelStreamChunkType::Reasoning(_) => {
-                                            let _ = tx.send(other.clone());
+                                    LanguageModelStreamChunk::Delta(other) => {
+                                        match other {
+                                            // Propagate text, reasoning, and tool call chunks
+                                            LanguageModelStreamChunkType::Text(_)
+                                            | LanguageModelStreamChunkType::Reasoning(_)
+                                            | LanguageModelStreamChunkType::ToolCall(_) => {
+                                                let _ = tx.send(other.clone());
+                                            }
+                                            _ => {}
                                         }
-                                        _ => {}
-                                    },
+                                    }
                                 }
                             }
                         }

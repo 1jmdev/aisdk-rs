@@ -357,9 +357,9 @@ impl<M: ModelName> LanguageModel for ClaudeCode<M> {
                                         text.push_str(&dt);
                                         Some(Ok(vec![LanguageModelStreamChunk::Delta(LanguageModelStreamChunkType::Text(dt))]))
                                     }
-                                    (AccumulatedBlock::Thinking { thinking, .. }, AnthropicDelta::ThinkingDelta { thinking: dt }) => {
+                                     (AccumulatedBlock::Thinking { thinking, .. }, AnthropicDelta::ThinkingDelta { thinking: dt }) => {
                                         thinking.push_str(&dt);
-                                        Some(Ok(vec![LanguageModelStreamChunk::Delta(LanguageModelStreamChunkType::Text(dt))]))
+                                        Some(Ok(vec![LanguageModelStreamChunk::Delta(LanguageModelStreamChunkType::Reasoning(dt))]))
                                     }
                                     (AccumulatedBlock::Thinking { signature, .. }, AnthropicDelta::SignatureDelta { signature: ds }) => {
                                         *signature = Some(ds);

@@ -136,6 +136,12 @@ impl<M: ModelName> LanguageModel for Codex<M> {
                     ),
                 )])
             }
+            Ok(client::OpenAiStreamEvent::ResponseFunctionCallArgumentsDelta { delta, .. }) => {
+                Ok(vec![LanguageModelStreamChunk::Delta(
+                    LanguageModelStreamChunkType::ToolCall(delta),
+                )])
+            }
+            Ok(client::OpenAiStreamEvent::ResponseFunctionCallArgumentsDone { .. }) => Ok(vec![]),
             Ok(client::OpenAiStreamEvent::ResponseError { code, message, .. }) => {
                 let reason = format!("{}: {}", code.unwrap_or("unknown".to_string()), message);
                 Ok(vec![LanguageModelStreamChunk::Delta(

@@ -75,43 +75,42 @@ pub enum VercelUIStream {
         #[serde(skip_serializing_if = "Option::is_none")]
         provider_metadata: Option<Value>,
     },
-    /// Start of tool call
-    #[serde(rename = "tool-call-start")]
+    /// Start of tool input streaming (ai-sdk v6: tool-input-start)
+    #[serde(rename = "tool-input-start")]
     ToolCallStart {
-        /// Message ID
-        id: String,
         /// Tool call ID
+        #[serde(rename = "toolCallId")]
         tool_call_id: String,
         /// Tool name
+        #[serde(rename = "toolName")]
         tool_name: String,
         /// Optional provider metadata
-        #[serde(skip_serializing_if = "Option::is_none")]
+        #[serde(rename = "providerMetadata", skip_serializing_if = "Option::is_none")]
         provider_metadata: Option<Value>,
     },
-    /// Delta of tool call
-    #[serde(rename = "tool-call-delta")]
+    /// Delta of tool input streaming (ai-sdk v6: tool-input-delta)
+    #[serde(rename = "tool-input-delta")]
     ToolCallDelta {
-        /// Message ID
-        id: String,
         /// Tool call ID
+        #[serde(rename = "toolCallId")]
         tool_call_id: String,
-        /// Delta
+        /// Input text delta
+        #[serde(rename = "inputTextDelta")]
         delta: String,
-        /// Optional provider metadata
-        #[serde(skip_serializing_if = "Option::is_none")]
-        provider_metadata: Option<Value>,
     },
-    /// End of tool call
-    #[serde(rename = "tool-call-end")]
+    /// Tool input fully available (ai-sdk v6: tool-input-available)
+    #[serde(rename = "tool-input-available")]
     ToolCallEnd {
-        /// Message ID
-        id: String,
         /// Tool call ID
+        #[serde(rename = "toolCallId")]
         tool_call_id: String,
-        /// Result
-        result: Value,
+        /// Tool name
+        #[serde(rename = "toolName")]
+        tool_name: String,
+        /// Full input
+        input: Value,
         /// Optional provider metadata
-        #[serde(skip_serializing_if = "Option::is_none")]
+        #[serde(rename = "providerMetadata", skip_serializing_if = "Option::is_none")]
         provider_metadata: Option<Value>,
     },
     /// Error chunk
@@ -265,7 +264,6 @@ impl crate::core::StreamTextResponse {
                 LanguageModelStreamChunkType::ToolCall(_json_str) => {
                     //TODO: handle tool call streams when they are supported
                     Some(VercelUIStream::ToolCallStart {
-                        id: message_id.clone(),
                         tool_call_id: "unknown".to_string(),
                         tool_name: "unknown".to_string(),
                         provider_metadata: None,

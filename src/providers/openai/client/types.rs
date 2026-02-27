@@ -115,6 +115,22 @@ pub(crate) enum OpenAiStreamEvent {
         message: String,
         param: Option<String>,
     },
+    /// Emitted when a function call argument delta arrives during streaming.
+    #[serde(rename = "response.function_call_arguments.delta")]
+    ResponseFunctionCallArgumentsDelta {
+        sequence_number: u64,
+        item_id: String,
+        output_index: u32,
+        delta: String,
+    },
+    /// Emitted when a function call's arguments are fully streamed.
+    #[serde(rename = "response.function_call_arguments.done")]
+    ResponseFunctionCallArgumentsDone {
+        sequence_number: u64,
+        item_id: String,
+        output_index: u32,
+        arguments: String,
+    },
     NotSupported(String),
 }
 
@@ -278,8 +294,10 @@ pub(crate) enum MessageItem {
     #[serde(rename = "output")]
     OutputMessage {
         content: Vec<OutputContent>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         id: Option<String>,
         role: Role,
+        #[serde(skip_serializing_if = "Option::is_none")]
         status: Option<String>,
         #[serde(rename = "type")]
         type_: String, // always "message"
@@ -306,12 +324,16 @@ pub(crate) enum MessageItem {
         status: Option<String>,
     },
     Reasoning {
+        #[serde(skip_serializing_if = "Option::is_none")]
         id: Option<String>,
         summary: Vec<ReasoningSummary>,
         #[serde(rename = "type")]
         type_: String, // always "reasoning"
+        #[serde(skip_serializing_if = "Option::is_none")]
         content: Option<Vec<ReasoningTextContent>>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         encrypted_content: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         status: Option<String>,
     },
 }

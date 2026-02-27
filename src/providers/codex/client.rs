@@ -5,11 +5,11 @@ pub(crate) use crate::providers::openai::client::types::*;
 use crate::core::client::LanguageModelClient;
 use crate::core::utils::join_url;
 use crate::error::Error;
-use futures::{Stream, StreamExt, stream};
 use crate::providers::codex::Codex;
 use crate::providers::codex::ModelName;
-use reqwest::header::{ACCEPT, CONTENT_TYPE};
+use futures::{Stream, StreamExt, stream};
 use reqwest::IntoUrl;
+use reqwest::header::{ACCEPT, CONTENT_TYPE};
 use reqwest_eventsource::Event;
 use serde_json::json;
 use std::pin::Pin;
@@ -37,9 +37,7 @@ impl<M: ModelName> LanguageModelClient for Codex<M> {
         let api_key = self.settings.api_key.trim();
         default_headers.insert(
             "Authorization",
-            format!("Bearer {}", api_key)
-                .parse()
-                .unwrap(),
+            format!("Bearer {}", api_key).parse().unwrap(),
         );
 
         default_headers
@@ -106,7 +104,9 @@ impl<M: ModelName> LanguageModelClient for Codex<M> {
     async fn send_and_stream(
         &self,
         base_url: impl IntoUrl,
-    ) -> crate::error::Result<Pin<Box<dyn Stream<Item = crate::error::Result<Self::StreamEvent>> + Send>>>
+    ) -> crate::error::Result<
+        Pin<Box<dyn Stream<Item = crate::error::Result<Self::StreamEvent>> + Send>>,
+    >
     where
         Self::StreamEvent: Send + 'static,
         Self: Sync,
@@ -117,9 +117,7 @@ impl<M: ModelName> LanguageModelClient for Codex<M> {
         let headers = self.headers();
         let query_params = self.query_params();
         let body = self.body();
-        let body_bytes = body
-            .as_bytes()
-            .map_or_else(Vec::new, |b| b.to_vec());
+        let body_bytes = body.as_bytes().map_or_else(Vec::new, |b| b.to_vec());
 
         let response = client
             .request(method.clone(), url.clone())

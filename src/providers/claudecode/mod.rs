@@ -10,9 +10,7 @@ use crate::core::client::LanguageModelClient;
 use crate::core::utils::validate_base_url;
 use crate::error::Error;
 use crate::providers::anthropic::{
-    ANTHROPIC_API_VERSION,
-    client::AnthropicOptions,
-    settings::AnthropicProviderSettings,
+    ANTHROPIC_API_VERSION, client::AnthropicOptions, settings::AnthropicProviderSettings,
 };
 use reqwest::header::CONTENT_TYPE;
 use serde::Serialize;
@@ -40,8 +38,7 @@ where
 impl<M> crate::core::capabilities::StructuredOutputSupport for ClaudeCode<M>
 where
     M: ModelName,
-    crate::providers::anthropic::Anthropic<M>:
-        crate::core::capabilities::StructuredOutputSupport,
+    crate::providers::anthropic::Anthropic<M>: crate::core::capabilities::StructuredOutputSupport,
 {
 }
 
@@ -196,11 +193,11 @@ impl<M: ModelName> LanguageModel for ClaudeCode<M> {
         self.send(self.settings.base_url.clone()).await.map(|resp| {
             // Reuse Anthropic's response-to-LanguageModelResponse mapping by
             // converting through the same fields.
-            use crate::core::language_model::LanguageModelResponseContentType;
-            use crate::providers::anthropic::client::AnthropicContentBlock;
-            use crate::core::tools::ToolDetails;
             use crate::core::ToolCallInfo;
+            use crate::core::language_model::LanguageModelResponseContentType;
+            use crate::core::tools::ToolDetails;
             use crate::extensions::Extensions;
+            use crate::providers::anthropic::client::AnthropicContentBlock;
             use crate::providers::anthropic::extensions;
 
             let mut collected: Vec<LanguageModelResponseContentType> = Vec::new();
@@ -209,10 +206,13 @@ impl<M: ModelName> LanguageModel for ClaudeCode<M> {
                     AnthropicContentBlock::Text { text, .. } => {
                         collected.push(LanguageModelResponseContentType::new(text));
                     }
-                    AnthropicContentBlock::Thinking { signature, thinking } => {
+                    AnthropicContentBlock::Thinking {
+                        signature,
+                        thinking,
+                    } => {
                         let exts = Extensions::default();
-                        exts.get_mut::<extensions::AnthropicThinkingMetadata>().signature =
-                            Some(signature);
+                        exts.get_mut::<extensions::AnthropicThinkingMetadata>()
+                            .signature = Some(signature);
                         collected.push(LanguageModelResponseContentType::Reasoning {
                             content: thinking,
                             extensions: exts,
@@ -274,13 +274,18 @@ impl<M: ModelName> LanguageModel for ClaudeCode<M> {
         // Delegate stream parsing to the Anthropic language model by temporarily
         // constructing an Anthropic instance with the same settings and streaming
         // from the already-open stream.
-        use crate::core::language_model::{LanguageModelStreamChunk, LanguageModelStreamChunkType, LanguageModelResponseContentType};
-        use crate::providers::anthropic::client::{AnthropicContentBlock, AnthropicDelta, AnthropicMessageDeltaUsage, AnthropicStreamEvent};
-        use crate::providers::anthropic::extensions;
+        use crate::core::ToolCallInfo;
+        use crate::core::language_model::{
+            LanguageModelResponseContentType, LanguageModelStreamChunk,
+            LanguageModelStreamChunkType,
+        };
         use crate::core::messages::AssistantMessage;
         use crate::core::tools::ToolDetails;
-        use crate::core::ToolCallInfo;
         use crate::extensions::Extensions;
+        use crate::providers::anthropic::client::{
+            AnthropicContentBlock, AnthropicDelta, AnthropicMessageDeltaUsage, AnthropicStreamEvent,
+        };
+        use crate::providers::anthropic::extensions;
         use futures::StreamExt;
         use std::collections::HashMap;
 
@@ -293,9 +298,16 @@ impl<M: ModelName> LanguageModel for ClaudeCode<M> {
         #[derive(Debug)]
         enum AccumulatedBlock {
             Text(String),
-            Thinking { thinking: String, signature: Option<String> },
+            Thinking {
+                thinking: String,
+                signature: Option<String>,
+            },
             RedactedThinking(String),
-            ToolUse { id: String, name: String, accumulated_json: String },
+            ToolUse {
+                id: String,
+                name: String,
+                accumulated_json: String,
+            },
         }
 
         let stream = response.scan::<_, Result<Vec<LanguageModelStreamChunk>>, _, _>(
@@ -451,7 +463,11 @@ impl ClaudeCode<DynamicModel> {
             .model(name.into())
             .build()
             .unwrap();
-        ClaudeCode { settings, options, _phantom: std::marker::PhantomData }
+        ClaudeCode {
+            settings,
+            options,
+            _phantom: std::marker::PhantomData,
+        }
     }
 }
 
@@ -462,7 +478,11 @@ impl<M: ModelName> Default for ClaudeCode<M> {
             .model(M::MODEL_NAME.to_string())
             .build()
             .unwrap();
-        Self { settings, options, _phantom: std::marker::PhantomData }
+        Self {
+            settings,
+            options,
+            _phantom: std::marker::PhantomData,
+        }
     }
 }
 
@@ -495,7 +515,11 @@ impl<M: ModelName> Default for ClaudeCodeBuilder<M> {
             .model(M::MODEL_NAME.to_string())
             .build()
             .unwrap();
-        Self { settings, options, _phantom: std::marker::PhantomData }
+        Self {
+            settings,
+            options,
+            _phantom: std::marker::PhantomData,
+        }
     }
 }
 
@@ -541,7 +565,10 @@ impl<M: ModelName> ClaudeCodeBuilder<M> {
         }
 
         Ok(ClaudeCode {
-            settings: AnthropicProviderSettings { base_url, ..self.settings },
+            settings: AnthropicProviderSettings {
+                base_url,
+                ..self.settings
+            },
             options: self.options,
             _phantom: std::marker::PhantomData,
         })

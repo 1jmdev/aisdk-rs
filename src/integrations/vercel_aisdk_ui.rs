@@ -4,6 +4,8 @@
 use futures::Stream;
 #[cfg(feature = "language-model-request")]
 use futures::StreamExt;
+#[cfg(feature = "language-model-request")]
+use futures::stream;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 #[cfg(feature = "language-model-request")]
@@ -237,61 +239,99 @@ impl crate::core::StreamTextResponse {
             .as_ref()
             .map(|f| f())
             .unwrap_or_else(|| format!("msg_{}", uuid::Uuid::new_v4().simple()));
+        let mut reasoning_open = false;
+        let mut tool_call_id: Option<String> = None;
 
-        self.stream.filter_map(move |chunk| {
-            let ui_chunk = match chunk {
-                LanguageModelStreamChunkType::Start if options.send_start => {
-                    Some(VercelUIStream::TextStart {
-                        id: message_id.clone(),
-                        provider_metadata: None,
-                    })
+        self.stream
+            .map(move |chunk| {
+                let mut chunks = Vec::new();
+
+                match chunk {
+                    LanguageModelStreamChunkType::Start if options.send_start => {
+                        reasoning_open = false;
+                        tool_call_id = None;
+                        chunks.push(VercelUIStream::TextStart {
+                            id: message_id.clone(),
+                            provider_metadata: None,
+                        });
+                    }
+
+                    LanguageModelStreamChunkType::Text(delta) => {
+                        chunks.push(VercelUIStream::TextDelta {
+                            id: message_id.clone(),
+                            delta,
+                            provider_metadata: None,
+                        });
+                    }
+
+                    LanguageModelStreamChunkType::Reasoning(delta) if options.send_reasoning => {
+                        if !reasoning_open {
+                            reasoning_open = true;
+                            chunks.push(VercelUIStream::ReasoningStart {
+                                id: message_id.clone(),
+                                provider_metadata: None,
+                            });
+                        }
+                        chunks.push(VercelUIStream::ReasoningDelta {
+                            id: message_id.clone(),
+                            delta,
+                            provider_metadata: None,
+                        });
+                    }
+
+                    LanguageModelStreamChunkType::ToolCall(delta) => {
+                        let first = tool_call_id.is_none();
+                        let current_id = tool_call_id
+                            .get_or_insert_with(|| {
+                                format!("tool_call_{}", uuid::Uuid::new_v4().simple())
+                            })
+                            .clone();
+
+                        if first {
+                            chunks.push(VercelUIStream::ToolCallStart {
+                                tool_call_id: current_id.clone(),
+                                tool_name: "tool".to_string(),
+                                provider_metadata: None,
+                            });
+                        }
+
+                        chunks.push(VercelUIStream::ToolCallDelta {
+                            tool_call_id: current_id,
+                            delta,
+                        });
+                    }
+
+                    LanguageModelStreamChunkType::End(_) if options.send_finish => {
+                        if reasoning_open && options.send_reasoning {
+                            reasoning_open = false;
+                            chunks.push(VercelUIStream::ReasoningEnd {
+                                id: message_id.clone(),
+                                provider_metadata: None,
+                            });
+                        }
+                        tool_call_id = None;
+                        chunks.push(VercelUIStream::TextEnd {
+                            id: message_id.clone(),
+                            provider_metadata: None,
+                        });
+                    }
+
+                    LanguageModelStreamChunkType::Failed(error)
+                    | LanguageModelStreamChunkType::Incomplete(error) => {
+                        chunks.push(VercelUIStream::Error { error_text: error });
+                    }
+
+                    LanguageModelStreamChunkType::NotSupported(_) => {}
+
+                    _ => {}
                 }
 
-                LanguageModelStreamChunkType::Text(delta) => Some(VercelUIStream::TextDelta {
-                    id: message_id.clone(),
-                    delta,
-                    provider_metadata: None,
-                }),
-
-                LanguageModelStreamChunkType::Reasoning(delta) if options.send_reasoning => {
-                    Some(VercelUIStream::ReasoningDelta {
-                        id: message_id.clone(),
-                        delta,
-                        provider_metadata: None,
-                    })
-                }
-
-                LanguageModelStreamChunkType::ToolCall(_json_str) => {
-                    //TODO: handle tool call streams when they are supported
-                    Some(VercelUIStream::ToolCallStart {
-                        tool_call_id: "unknown".to_string(),
-                        tool_name: "unknown".to_string(),
-                        provider_metadata: None,
-                    })
-                }
-
-                LanguageModelStreamChunkType::End(_) if options.send_finish => {
-                    Some(VercelUIStream::TextEnd {
-                        id: message_id.clone(),
-                        provider_metadata: None,
-                    })
-                }
-
-                LanguageModelStreamChunkType::Failed(error)
-                | LanguageModelStreamChunkType::Incomplete(error) => {
-                    Some(VercelUIStream::Error { error_text: error })
-                }
-
-                // Skip and continue
-                LanguageModelStreamChunkType::NotSupported(_) => None,
-
-                //TODO: handle other vercel chunk types
-                // Skip and continue
-                _ => None,
-            };
-
-            futures::future::ready(ui_chunk.map(Ok))
-        })
+                chunks
+                    .into_iter()
+                    .map(Ok)
+                    .collect::<Vec<crate::Result<VercelUIStream>>>()
+            })
+            .flat_map(stream::iter)
     }
 }
 
